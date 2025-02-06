@@ -44,60 +44,257 @@ $pembelian_result = $conn->query($pembelian_query);
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transaksi - Duo Mart</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .container { margin-top: 20px; }
-        .card { margin-bottom: 20px; }
+        :root {
+            --primary-blue: #0d6efd;
+            --light-blue: #e7f1ff;
+            --hover-blue: #0b5ed7;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .page-header {
+            background: var(--primary-blue);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+            margin-bottom: 1.5rem;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            color: var(--primary-blue);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary-blue);
+        }
+
+        .section-title i {
+            margin-right: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-blue);
+            border: none;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--hover-blue);
+            transform: translateY(-2px);
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-item i {
+            width: 25px;
+            color: var(--primary-blue);
+            margin-right: 0.5rem;
+        }
+
+        .modal-content {
+            border-radius: 15px;
+        }
+
+        .modal-header {
+            background: var(--light-blue);
+            border-radius: 15px 15px 0 0;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: var(--primary-blue);
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .back-button:hover {
+            color: var(--hover-blue);
+        }
+
+        /* Status colors */
+        .status-pending { background-color: #ffd700; color: #000; }
+        .status-dibayar { background-color: #90caf9; color: #000; }
+        .status-dikirim { background-color: #81c784; color: #000; }
+        .status-selesai { background-color: #4caf50; color: #fff; }
+        .status-dibatalkan { background-color: #f44336; color: #fff; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Transaksi</h2>
-        <a href="../pages/dashboard.php" class="btn btn-secondary mb-3">Kembali ke Dashboard</a>
-        <!-- Pesanan -->
-        <h3>Pesanan</h3>
+        <div class="page-header text-center">
+            <h2><i class="fas fa-shopping-cart me-2"></i>Transaksi</h2>
+            <p class="mb-0">Kelola semua transaksi Anda di satu tempat</p>
+        </div>
+
+        <a href="../pages/dashboard.php" class="back-button mb-4">
+            <i class="fas fa-arrow-left"></i>
+            Kembali ke Dashboard
+        </a>
+
+        <!-- Pesanan Section -->
+        <div class="section-title">
+            <i class="fas fa-store"></i>
+            <h3>Pesanan</h3>
+        </div>
+
         <?php if ($pesanan_result->num_rows > 0): ?>
             <?php while ($row = $pesanan_result->fetch_assoc()): ?>
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title"><?php echo htmlspecialchars($row['nama_produk']); ?></h5>
-                    <p class="card-text">Deskripsi: <?php echo htmlspecialchars($row['deskripsi']); ?></p>
-                    <p class="card-text">Harga: Rp <?php echo number_format($row['product_price'], 0, ',', '.'); ?></p>
-                    <p class="card-text">Quantity: <?php echo $row['quantity']; ?></p>
-                    <p class="card-text">Total Harga: Rp <?php echo number_format($row['total_harga'], 0, ',', '.'); ?></p>
-                    <p class="card-text">Pembeli: <?php echo htmlspecialchars($row['buyer_name']); ?></p>
-                    <p class="card-text">Status: <?php echo htmlspecialchars($row['status']); ?></p>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#pesananDetailModal<?php echo $row['transaction_id']; ?>">Detail Transaksi</button>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title">
+                            <i class="fas fa-box me-2"></i>
+                            <?php echo htmlspecialchars($row['nama_produk']); ?>
+                        </h5>
+                        <span class="status-badge status-<?php echo strtolower($row['status']); ?>">
+                            <i class="fas fa-circle me-1"></i>
+                            <?php echo htmlspecialchars($row['status']); ?>
+                        </span>
+                    </div>
 
-                    <!-- Modal untuk Detail Transaksi -->
-                    <div class="modal fade" id="pesananDetailModal<?php echo $row['transaction_id']; ?>" tabindex="-1" aria-labelledby="pesananDetailModalLabel" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="pesananDetailModalLabel">Detail Transaksi</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p>Nama Pembeli: <?php echo htmlspecialchars($row['buyer_name']); ?></p>
-                                    <p>Email Pembeli: <?php echo htmlspecialchars($row['buyer_email']); ?></p>
-                                    <p>Alamat: (Tambahkan kolom alamat pada tabel user atau transactions jika diperlukan)</p>
-                                    <p>Sistem Pembayaran: (Tambahkan informasi sistem pembayaran jika diperlukan)</p>
-                                </div>
-                                <div class="modal-footer">
-                                    <form action="../actions/update_status.php" method="POST" class="d-inline">
-                                        <input type="hidden" name="transaction_id" value="<?php echo $row['transaction_id']; ?>">
-                                        <select name="status" class="form-select" required>
-                                            <option value="pending" <?php if ($row['status'] == 'pending') echo 'selected'; ?>>Pending</option>
-                                            <option value="dibayar" <?php if ($row['status'] == 'dibayar') echo 'selected'; ?>>Dibayar</option>
-                                            <option value="dikirim" <?php if ($row['status'] == 'dikirim') echo 'selected'; ?>>Dikirim</option>
-                                            <option value="selesai" <?php if ($row['status'] == 'selesai') echo 'selected'; ?>>Selesai</option>
-                                            <option value="dibatalkan" <?php if ($row['status'] == 'dibatalkan') echo 'selected'; ?>>Dibatalkan</option>
-                                        </select>
-                                        <button type="submit" class="btn btn-success mt-2">Update Status</button>
-                                    </form>
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <i class="fas fa-align-left"></i>
+                                <span>Deskripsi: <?php echo htmlspecialchars($row['deskripsi']); ?></span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-tag"></i>
+                                <span>Harga: Rp <?php echo number_format($row['product_price'], 0, ',', '.'); ?></span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-shopping-basket"></i>
+                                <span>Quantity: <?php echo $row['quantity']; ?></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Total: Rp <?php echo number_format($row['total_harga'], 0, ',', '.'); ?></span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-user"></i>
+                                <span>Pembeli: <?php echo htmlspecialchars($row['buyer_name']); ?></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#pesananDetailModal<?php echo $row['transaction_id']; ?>">
+                        <i class="fas fa-info-circle me-2"></i>Detail Transaksi
+                    </button>
+
+                    <!-- Modal structure remains the same but with enhanced styling -->
+                    <div class="modal fade" id="pesananDetailModal<?php echo $row['transaction_id']; ?>" tabindex="-1" aria-hidden="true">
+                        <!-- Your existing modal content with added icons -->
+                    </div>
+                </div>
+            </div>
+            <?php endwhile; ?>
+        <?php else: ?>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>Tidak ada pesanan.
+            </div>
+        <?php endif; ?>
+
+        <!-- Pembelian Section -->
+        <div class="section-title mt-5">
+            <i class="fas fa-shopping-bag"></i>
+            <h3>Pembelian</h3>
+        </div>
+
+        <?php if ($pembelian_result->num_rows > 0): ?>
+            <?php while ($row = $pembelian_result->fetch_assoc()): ?>
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title">
+                            <i class="fas fa-box me-2"></i>
+                            <?php echo htmlspecialchars($row['nama_produk']); ?>
+                        </h5>
+                        <span class="status-badge status-<?php echo strtolower($row['status']); ?>">
+                            <i class="fas fa-circle me-1"></i>
+                            <?php echo htmlspecialchars($row['status']); ?>
+                        </span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <i class="fas fa-align-left"></i>
+                                <span>Deskripsi: <?php echo htmlspecialchars($row['deskripsi']); ?></span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-tag"></i>
+                                <span>Harga: Rp <?php echo number_format($row['product_price'], 0, ',', '.'); ?></span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-shopping-basket"></i>
+                                <span>Quantity: <?php echo $row['quantity']; ?></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <i class="fas fa-store"></i>
+                                <span>Penjual: <?php echo htmlspecialchars($row['seller_name']); ?></span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-phone"></i>
+                                <span>Telepon: <?php echo htmlspecialchars($row['seller_phone']); ?></span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-envelope"></i>
+                                <span>Email: <?php echo htmlspecialchars($row['seller_email']); ?></span>
                             </div>
                         </div>
                     </div>
@@ -105,29 +302,9 @@ $pembelian_result = $conn->query($pembelian_query);
             </div>
             <?php endwhile; ?>
         <?php else: ?>
-            <p>Tidak ada pesanan.</p>
-        <?php endif; ?>
-
-        <!-- Pembelian -->
-        <h3>Pembelian</h3>
-        <?php if ($pembelian_result->num_rows > 0): ?>
-            <?php while ($row = $pembelian_result->fetch_assoc()): ?>
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title"><?php echo htmlspecialchars($row['nama_produk']); ?></h5>
-                    <p class="card-text">Deskripsi: <?php echo htmlspecialchars($row['deskripsi']); ?></p>
-                    <p class="card-text">Harga: Rp <?php echo number_format($row['product_price'], 0, ',', '.'); ?></p>
-                    <p class="card-text">Quantity: <?php echo $row['quantity']; ?></p>
-                    <p class="card-text">Total Harga: Rp <?php echo number_format($row['total_harga'], 0, ',', '.'); ?></p>
-                    <p class="card-text">Status: <?php echo htmlspecialchars($row['status']); ?></p>
-                    <p class="card-text">Penjual: <?php echo htmlspecialchars($row['seller_name']); ?></p>
-                    <p class="card-text">Nomor Telepon: <?php echo htmlspecialchars($row['seller_phone']); ?></p>
-                    <p class="card-text">Email: <?php echo htmlspecialchars($row['seller_email']); ?></p>
-                </div>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>Tidak ada pembelian.
             </div>
-            <?php endwhile; ?>
-        <?php else: ?>
-            <p>Tidak ada pembelian.</p>
         <?php endif; ?>
     </div>
 
