@@ -54,7 +54,7 @@ $pembelian_result = $conn->query($pembelian_query);
 <body>
     <div class="container">
         <h2>Transaksi</h2>
-        
+        <a href="../pages/dashboard.php" class="btn btn-secondary mb-3">Kembali ke Dashboard</a>
         <!-- Pesanan -->
         <h3>Pesanan</h3>
         <?php if ($pesanan_result->num_rows > 0): ?>
