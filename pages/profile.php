@@ -9,6 +9,61 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Inisialisasi variable pesan
+$error_msg = "";
+$success_msg = "";
+
+// Proses form ganti password
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $current_password = $_POST['current_password'];
+    $new_password = $_POST['new_password'];
+    $confirm_password = $_POST['confirm_password'];
+    $user_id = $_SESSION['user_id'];
+
+    // Validasi input
+    if (empty($current_password) || empty($new_password) || empty($confirm_password)) {
+        $error_msg = "Semua field harus diisi!";
+    } 
+    // Cek apakah password baru dan konfirmasi sama
+    elseif ($new_password !== $confirm_password) {
+        $error_msg = "Password baru dan konfirmasi password tidak cocok!";
+    }
+    // Cek panjang minimal password
+    elseif (strlen($new_password) < 6) {
+        $error_msg = "Password baru minimal 6 karakter!";
+    } 
+    else {
+        // Cek password lama
+        $stmt = $conn->prepare("SELECT password FROM user WHERE id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 1) {
+            $user = $result->fetch_assoc();
+            // Verifikasi password lama
+            if (password_verify($current_password, $user['password'])) {
+                // Hash password baru
+                $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+                
+                // Update password
+                $update_stmt = $conn->prepare("UPDATE user SET password = ? WHERE id = ?");
+                $update_stmt->bind_param("si", $hashed_password, $user_id);
+                
+                if ($update_stmt->execute()) {
+                    $success_msg = "Password berhasil diubah!";
+                } else {
+                    $error_msg = "Gagal mengubah password!";
+                }
+                $update_stmt->close();
+            } else {
+                $error_msg = "Password saat ini tidak sesuai!";
+            }
+        }
+        $stmt->close();
+    }
+}
+
 $user_id = $_SESSION['user_id'];
 
 // Ambil data user berdasarkan user_id
@@ -18,6 +73,8 @@ $user = $result->fetch_assoc();
 <!DOCTYPE html>
 <html lang='id'>
 <head>
+<link rel="icon" type="image/x-icon" href="../favicon/favicon.ico">
+<link rel="shortcut icon" href="../favicon/favicon.ico" type="image/x-icon">
     <meta charset='UTF-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profil</title>
@@ -253,20 +310,53 @@ $user = $result->fetch_assoc();
 <!-- Form Ganti Password -->
 <div class='form-container'>
     <h3 class="section-title">Ganti Password</h3>
-    <form action='change_password.php' method='POST'>
+    
+    <?php if (!empty($error_msg)): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <?php echo $error_msg; ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <?php endif; ?>
+
+    <?php if (!empty($success_msg)): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <?php echo $success_msg; ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <?php endif; ?>
+
+    <form method="POST" id="changePasswordForm" action="<?php echo $_SERVER['PHP_SELF']; ?>">
         <div class='mb-3'>
             <label for='current_password' class='form-label'>Password Saat Ini</label>
-            <input type='password' name='current_password' id='current_password' class='form-control' required>
+            <div class="input-group">
+                <input type='password' name='current_password' id='current_password' class='form-control' required>
+                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="current_password">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
         </div>
 
         <div class='mb-3'>
             <label for='new_password' class='form-label'>Password Baru</label>
-            <input type='password' name='new_password' id='new_password' class='form-control' required>
+            <div class="input-group">
+                <input type='password' name='new_password' id='new_password' class='form-control' required>
+                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="new_password">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            <small class="text-muted">Minimal 6 karakter</small>
         </div>
 
         <div class='mb-3'>
             <label for='confirm_password' class='form-label'>Konfirmasi Password</label>
-            <input type='password' name='confirm_password' id='confirm_password' class='form-control' required>
+            <div class="input-group">
+                <input type='password' name='confirm_password' id='confirm_password' class='form-control' required>
+                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="confirm_password">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
         </div>
 
         <button type='submit' class='btn btn-success'>
@@ -275,21 +365,40 @@ $user = $result->fetch_assoc();
     </form>
 </div>
 
-<!-- Bootstrap JS Bundle CDN -->
-<script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'></script>
-
-<!-- Custom JavaScript -->
 <script>
-document.getElementById('foto').onchange = function(e) {
-    if (e.target.files && e.target.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('profileImage').src = e.target.result;
+// Function untuk toggle password visibility
+document.querySelectorAll('.toggle-password').forEach(button => {
+    button.addEventListener('click', function() {
+        const input = document.getElementById(this.getAttribute('data-target'));
+        const icon = this.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
         }
-        reader.readAsDataURL(e.target.files[0]);
-    }
-}
-</script>
+    });
+});
 
-</body>
-</html>
+// Validasi form sebelum submit
+document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+    const newPass = document.getElementById('new_password').value;
+    const confirmPass = document.getElementById('confirm_password').value;
+    
+    if (newPass.length < 6) {
+        e.preventDefault();
+        alert('Password baru minimal 6 karakter!');
+        return false;
+    }
+    
+    if (newPass !== confirmPass) {
+        e.preventDefault();
+        alert('Password baru dan konfirmasi password tidak cocok!');
+        return false;
+    }
+});
+</script>
