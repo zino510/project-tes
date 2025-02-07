@@ -305,9 +305,196 @@ $result = $conn->query("SELECT * FROM product");
                 font-size: 1.5rem;
             }
         }
+
+         /* Perbaikan untuk Mobile */
+    @media (max-width: 768px) {
+        /* Navbar Mobile */
+        .navbar {
+            padding: 0.5rem 0;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+        }
+
+        .navbar .container {
+            padding: 0 15px;
+        }
+
+        #navbarNav {
+            background: var(--white);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .navbar-nav {
+            gap: 0.5rem;
+        }
+
+        /* Button Mobile */
+        .btn-custom {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            width: 100%;
+            margin: 0.25rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Product Cards Mobile */
+        .col-md-3 {
+            padding: 0 10px;
+        }
+
+        .product-card {
+            margin-bottom: 1rem;
+        }
+
+        .product-image {
+            padding-top: 100%; /* Make images square on mobile */
+        }
+
+        .product-details {
+            padding: 1rem;
+        }
+
+        .product-title {
+            font-size: 1rem;
+        }
+
+        .product-price {
+            font-size: 1.1rem;
+        }
+
+        .product-description {
+            font-size: 0.85rem;
+            -webkit-line-clamp: 2;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Category Pills Mobile */
+        .category-pills {
+            padding: 0.5rem 15px;
+            margin: 0 -15px;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .category-pill {
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            scroll-snap-align: start;
+            flex-shrink: 0;
+        }
+
+        /* Section Title Mobile */
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            padding: 0 15px;
+        }
+
+        /* Container Spacing */
+        .container {
+            padding: 0 10px;
+        }
+
+        .product-section {
+            padding: 1rem 0;
+        }
+
+        /* Grid Layout Mobile */
+        .row {
+            margin: 0 -10px;
+        }
+
+        .col-6 {
+            padding: 0 10px;
+            margin-bottom: 20px;
+        }
+    }
+
+    /* Tambahan untuk Perangkat Sangat Kecil */
+    @media (max-width: 576px) {
+        .col-md-3 {
+            width: 50%; /* 2 cards per row on very small devices */
+        }
+
+        .product-title {
+            font-size: 0.9rem;
+        }
+
+        .btn-detail {
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem;
+        }
+    }
+
+    /* Bottom Navigation for Mobile */
+    .mobile-bottom-nav {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--white);
+        padding: 0.5rem;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+
+    @media (max-width: 768px) {
+        .mobile-bottom-nav {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 0.8rem;
+        }
+
+        .mobile-nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 0.2rem;
+        }
+
+        body {
+            padding-bottom: 60px; /* Space for bottom nav */
+        }
+    }
     </style>
 </head>
 <body onload="noBack();" onpageshow="if (event.persisted) noBack();" onunload="">
+
+<!-- Dalam body, tambahkan bottom navigation untuk mobile -->
+<div class="mobile-bottom-nav">
+    <a href="index.php" class="mobile-nav-item">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+    </a>
+    <a href="post_barang.php" class="mobile-nav-item">
+        <i class="fas fa-plus-circle"></i>
+        <span>Jual</span>
+    </a>
+    <a href="transactions.php" class="mobile-nav-item">
+        <i class="fas fa-shopping-bag"></i>
+        <span>Orders</span>
+    </a>
+    <a href="profile.php" class="mobile-nav-item">
+        <i class="fas fa-user"></i>
+        <span>Profil</span>
+    </a>
+</div>
 
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg">
@@ -353,9 +540,9 @@ $result = $conn->query("SELECT * FROM product");
 <!-- Products -->
 <div class="container product-section">
     <h2 class="section-title">Produk Terbaru</h2>
-    <div class="row g-4">
+    <div class="row">
         <?php while ($row = $result->fetch_assoc()): ?>
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="product-card">
                     <div class="product-image">
                         <img src="../<?php echo $row['gambar']; ?>" alt="<?php echo htmlspecialchars($row['nama_produk']); ?>">

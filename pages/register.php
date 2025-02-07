@@ -189,6 +189,156 @@
             border-color: var(--primary);
             transform: translateY(-3px);
         }
+
+        html {
+            height: -webkit-fill-available;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+                background: var(--primary);
+            }
+
+            .floating-shape {
+                display: none;
+            }
+
+            .register-container {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                padding: 1.5rem;
+                border-radius: 20px 20px 0 0;
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(10px);
+                overflow-y: auto;
+                max-height: 92vh;
+                transform: translateY(0);
+                transition: transform 0.3s ease;
+            }
+
+            .logo-container {
+                margin-bottom: 1rem;
+            }
+
+            .logo-container i {
+                font-size: 1.8rem;
+            }
+
+            .logo-container h1 {
+                font-size: 1.5rem;
+                margin: 0.5rem 0;
+            }
+
+            .logo-container p {
+                font-size: 0.85rem;
+                margin-bottom: 0.5rem;
+            }
+
+            /* Form Optimizations */
+            .form-group {
+                margin-bottom: 0.8rem;
+            }
+
+            .form-control {
+                height: 48px;
+                padding: 0.7rem 1rem 0.7rem 2.5rem;
+                font-size: 1rem;
+            }
+
+            .form-icon {
+                font-size: 1.1rem;
+                left: 0.8rem;
+            }
+
+            .password-toggle {
+                padding: 12px;
+                right: 0.5rem;
+            }
+
+            /* Button Optimizations */
+            .btn-register {
+                height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1rem;
+                margin-top: 1rem;
+            }
+
+            .login-link {
+                margin-top: 1rem;
+                font-size: 0.85rem;
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+        }
+
+        /* Additional Mobile Improvements */
+        @media (max-height: 667px) {
+            .register-container {
+                padding: 1rem;
+            }
+
+            .logo-container {
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        /* Touch Optimizations */
+        .form-control, .btn-register, .password-toggle {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Scrollbar Styling */
+        .register-container {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .register-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Input Autofill Styling */
+        input:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 30px white inset !important;
+        }
+
+        /* Active States */
+        .btn-register:active {
+            transform: scale(0.98);
+        }
+
+        /* Focus States */
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -266,6 +416,8 @@
                 }, false)
             })
         })()
+
+        
     </script>
 </body>
 </html>

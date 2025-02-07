@@ -206,6 +206,150 @@
             0% { transform: translate(0, 0) rotate(0deg); }
             100% { transform: translate(400px, -400px) rotate(360deg); }
         }
+
+          /* Tambahan CSS untuk Mobile Responsiveness */
+          @media (max-width: 768px) {
+            /* Navbar Mobile */
+            .navbar {
+                padding: 0.5rem 1rem;
+            }
+
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+
+            .navbar-collapse {
+                background: rgba(15, 23, 42, 0.95);
+                padding: 1rem;
+                border-radius: 10px;
+                margin-top: 1rem;
+            }
+
+            .nav-link {
+                margin: 0.5rem 0;
+                text-align: center;
+            }
+
+            /* Hero Section Mobile */
+            .hero-section {
+                padding: 60px 0;
+                min-height: 80vh;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+                padding: 0 1rem;
+            }
+
+            .btn-custom {
+                padding: 0.8rem 1.5rem;
+                font-size: 0.9rem;
+            }
+
+            /* Info Section Mobile */
+            .info-section {
+                padding: 40px 0;
+                margin: 20px 0;
+            }
+
+            .info-card {
+                margin: 0 1rem;
+                padding: 1.5rem;
+            }
+
+            .info-card i {
+                font-size: 2rem;
+            }
+
+            .info-card h3 {
+                font-size: 1.2rem;
+            }
+
+            .info-card p {
+                font-size: 0.9rem;
+            }
+
+            /* Floating Elements Mobile */
+            .floating-element {
+                display: none; /* Hide on mobile for better performance */
+            }
+
+            /* Container Spacing */
+            .container {
+                padding: 0 15px;
+            }
+        }
+
+        /* Mobile Navigation Menu */
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 0.8rem;
+            z-index: 1000;
+        }
+
+        .mobile-menu-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .mobile-menu-item {
+            color: var(--text-light);
+            text-decoration: none;
+            text-align: center;
+            padding: 0.5rem;
+        }
+
+        .mobile-menu-item i {
+            font-size: 1.2rem;
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+
+        .mobile-menu-item span {
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu {
+                display: block;
+            }
+
+            body {
+                padding-bottom: 70px; /* Space for mobile menu */
+            }
+
+            /* Hide desktop navbar items on mobile */
+            .navbar-nav {
+                display: none;
+            }
+        }
+
+        /* Additional Mobile Optimizations */
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .info-card {
+                margin: 0 0.5rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -288,6 +432,55 @@
         </div>
     </div>
 
+    <!-- Add Mobile Bottom Navigation -->
+    <div class="mobile-menu">
+        <div class="mobile-menu-items">
+            <a href="#" class="mobile-menu-item">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="pages/login.php" class="mobile-menu-item">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Login</span>
+            </a>
+            <a href="pages/register.php" class="mobile-menu-item">
+                <i class="fas fa-user-plus"></i>
+                <span>Register</span>
+            </a>
+            <a href="pages/dashboard.php" class="mobile-menu-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Modify Hero Section for better mobile display -->
+    <section class="hero-section">
+        <div class="container hero-content text-center">
+            <h1 class="hero-title">Welcome to<br>DuoMart</h1>
+            <p class="hero-subtitle">Discover a new way of buying and selling in our innovative marketplace</p>
+            <a class="btn btn-custom" href="pages/register.php">
+                <span class="position-relative">
+                    <i class="fas fa-rocket me-2"></i>
+                    Start Now
+                </span>
+            </a>
+        </div>
+    </section>
+
+    <!-- Rest of the content remains the same -->
+
+    <script>
+        // Add scroll behavior for navbar
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.style.background = 'rgba(15, 23, 42, 0.95) !important';
+            } else {
+                navbar.style.background = 'rgba(255, 255, 255, 0.1) !important';
+            }
+        });
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

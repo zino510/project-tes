@@ -195,6 +195,166 @@
         .forgot-password a:hover {
             color: var(--primary);
         }
+
+         /* Base styles */
+         html {
+            height: -webkit-fill-available;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+                background: var(--primary);
+            }
+
+            .floating-shape {
+                display: none; /* Hide floating shapes on mobile */
+            }
+
+            .login-container {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                padding: 1.5rem;
+                border-radius: 20px 20px 0 0;
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(10px);
+                overflow-y: auto;
+                max-height: 90vh;
+                transform: translateY(0);
+                transition: transform 0.3s ease;
+            }
+
+            .logo-container {
+                margin-bottom: 1.5rem;
+            }
+
+            .logo-container i {
+                font-size: 2rem;
+            }
+
+            .logo-container h1 {
+                font-size: 1.75rem;
+                margin: 0.5rem 0;
+            }
+
+            .logo-container p {
+                font-size: 0.9rem;
+                margin-bottom: 1rem;
+            }
+
+            .form-group {
+                margin-bottom: 1rem;
+            }
+
+            .form-control {
+                padding: 0.75rem 1rem 0.75rem 2.5rem;
+                font-size: 1rem;
+                height: 48px; /* Optimal touch target size */
+            }
+
+            .form-icon {
+                font-size: 1.1rem;
+                left: 0.8rem;
+            }
+
+            .password-toggle {
+                padding: 12px;
+                right: 0.5rem;
+            }
+
+            .btn-login {
+                height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1rem;
+                margin-top: 1.5rem;
+            }
+
+            .forgot-password {
+                margin: 0.5rem 0;
+            }
+
+            .forgot-password a {
+                font-size: 0.85rem;
+                padding: 0.5rem 0;
+                display: inline-block;
+            }
+
+            .register-link {
+                margin-top: 1rem;
+                font-size: 0.9rem;
+                padding-bottom: 1rem;
+            }
+        }
+
+        /* Additional mobile improvements */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 1.25rem;
+            }
+        }
+
+        /* Prevent pull-to-refresh and bounce effects */
+        .login-container {
+            overscroll-behavior-y: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Better touch interactions */
+        input, button, a {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Remove autofill background */
+        input:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 30px white inset !important;
+        }
+
+        /* Smooth scrolling */
+        .login-container {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .login-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Focus styles for better visibility */
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Active state for buttons */
+        .btn-login:active {
+            transform: scale(0.98);
+        }
     </style>
 </head>
 <body>
@@ -265,6 +425,44 @@
                 }, false)
             })
         })()
+
+           // Prevent zoom on double tap
+           document.addEventListener('touchstart', function(event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        // Prevent zoom on input focus
+        const metas = document.getElementsByTagName('meta');
+        for (let i = 0; i < metas.length; i++) {
+            if (metas[i].name === 'viewport') {
+                metas[i].content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0';
+            }
+        }
+
+        // Handle virtual keyboard
+        const loginContainer = document.querySelector('.login-container');
+        const originalHeight = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            if (window.innerHeight < originalHeight) {
+                // Keyboard is shown
+                loginContainer.style.transform = 'translateY(-10%)';
+            } else {
+                // Keyboard is hidden
+                loginContainer.style.transform = 'translateY(0)';
+            }
+        });
+
+        // Fix iOS height issue
+        function adjustHeight() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+
+        window.addEventListener('resize', adjustHeight);
+        adjustHeight();
     </script>
 </body>
 </html>
