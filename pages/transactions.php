@@ -43,8 +43,8 @@ $pembelian_result = $conn->query($pembelian_query);
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<link rel="icon" type="image/x-icon" href="../favicon/favicon.ico">
-<link rel="shortcut icon" href="../favicon/favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/x-icon" href="../favicon/favicon.ico">
+    <link rel="shortcut icon" href="../favicon/favicon.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transaksi - Duo Mart</title>
@@ -236,9 +236,42 @@ $pembelian_result = $conn->query($pembelian_query);
                         <i class="fas fa-info-circle me-2"></i>Detail Transaksi
                     </button>
 
-                    <!-- Modal structure remains the same but with enhanced styling -->
+                    <!-- Modal structure with details -->
                     <div class="modal fade" id="pesananDetailModal<?php echo $row['transaction_id']; ?>" tabindex="-1" aria-hidden="true">
-                        <!-- Your existing modal content with added icons -->
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Detail Transaksi - <?php echo htmlspecialchars($row['nama_produk']); ?></h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p><strong>Deskripsi:</strong> <?php echo htmlspecialchars($row['deskripsi']); ?></p>
+                                    <p><strong>Harga:</strong> Rp <?php echo number_format($row['product_price'], 0, ',', '.'); ?></p>
+                                    <p><strong>Quantity:</strong> <?php echo $row['quantity']; ?></p>
+                                    <p><strong>Total:</strong> Rp <?php echo number_format($row['total_harga'], 0, ',', '.'); ?></p>
+                                    <p><strong>Status:</strong> <?php echo htmlspecialchars($row['status']); ?></p>
+                                    <p><strong>Pembeli:</strong> <?php echo htmlspecialchars($row['buyer_name']); ?> (<?php echo htmlspecialchars($row['buyer_email']); ?>)</p>
+                                    <p><strong>Tanggal Transaksi:</strong> <?php echo htmlspecialchars($row['created_at']); ?></p>
+                                    <form method="POST" action="update_status.php">
+                                        <input type="hidden" name="transaction_id" value="<?php echo $row['transaction_id']; ?>">
+                                        <div class="mb-3">
+                                            <label for="status" class="form-label">Ubah Status</label>
+                                            <select class="form-select" id="status" name="status">
+                                                <option value="pending" <?php echo ($row['status'] == 'pending') ? 'selected' : ''; ?>>Pending</option>
+                                                <option value="dibayar" <?php echo ($row['status'] == 'dibayar') ? 'selected' : ''; ?>>Dibayar</option>
+                                                <option value="dikirim" <?php echo ($row['status'] == 'dikirim') ? 'selected' : ''; ?>>Dikirim</option>
+                                                <option value="selesai" <?php echo ($row['status'] == 'selesai') ? 'selected' : ''; ?>>Selesai</option>
+                                                <option value="dibatalkan" <?php echo ($row['status'] == 'dibatalkan') ? 'selected' : ''; ?>>Dibatalkan</option>
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Simpan</button>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -297,6 +330,35 @@ $pembelian_result = $conn->query($pembelian_query);
                             <div class="info-item">
                                 <i class="fas fa-envelope"></i>
                                 <span>Email: <?php echo htmlspecialchars($row['seller_email']); ?></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#pembelianDetailModal<?php echo $row['transaction_id']; ?>">
+                        <i class="fas fa-info-circle me-2"></i>Detail Transaksi
+                    </button>
+
+                    <!-- Modal structure with details -->
+                    <div class="modal fade" id="pembelianDetailModal<?php echo $row['transaction_id']; ?>" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Detail Transaksi - <?php echo htmlspecialchars($row['nama_produk']); ?></h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p><strong>Deskripsi:</strong> <?php echo htmlspecialchars($row['deskripsi']); ?></p>
+                                    <p><strong>Harga:</strong> Rp <?php echo number_format($row['product_price'], 0, ',', '.'); ?></p>
+                                    <p><strong>Quantity:</strong> <?php echo $row['quantity']; ?></p>
+                                    <p><strong>Total:</strong> Rp <?php echo number_format($row['total_harga'], 0, ',', '.'); ?></p>
+                                    <p><strong>Status:</strong> <?php echo htmlspecialchars($row['status']); ?></p>
+                                    <p><strong>Penjual:</strong> <?php echo htmlspecialchars($row['seller_name']); ?> (<?php echo htmlspecialchars($row['seller_email']); ?>)</p>
+                                    <p><strong>Telepon Penjual:</strong> <?php echo htmlspecialchars($row['seller_phone']); ?></p>
+                                    <p><strong>Tanggal Transaksi:</strong> <?php echo htmlspecialchars($row['created_at']); ?></p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                </div>
                             </div>
                         </div>
                     </div>
