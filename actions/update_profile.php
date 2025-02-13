@@ -13,57 +13,87 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 
 // Ambil data dari form
-$nama     = isset($_POST['nama']) ? $_POST['nama'] : '';
-$username = isset($_POST['username']) ? $_POST['username'] : '';
-$telepon  = isset($_POST['telepon']) ? $_POST['telepon'] : '';
-$bio      = isset($_POST['bio']) ? $_POST['bio'] : '';
+$nama     = isset($_POST['nama']) ? trim($_POST['nama']) : '';
+$username = isset($_POST['username']) ? trim($_POST['username']) : '';
+$telepon  = isset($_POST['telepon']) ? trim($_POST['telepon']) : '';
+$bio      = isset($_POST['bio']) ? trim($_POST['bio']) : '';
 
-// Siapkan variabel untuk menyimpan nama file foto baru (jika ada)
-$fotoName = null;
+// Siapkan variabel untuk pesan error dan success
+$error_message = '';
+$success_message = '';
 
-// Pastikan folder uploads sudah dibuat, misalnya /uploads di root project
+// Pastikan folder uploads ada dan bisa ditulis
 $uploadDir = '../uploads/';
-
-// Periksa apakah ada file foto yang diupload
-if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
-    // Dapatkan informasi file
-    $tempName    = $_FILES['foto']['tmp_name'];
-    $originalName = $_FILES['foto']['name'];
-    
-    // Buat nama yang unik untuk file (opsional)
-    $fotoName = time() . '_' . $originalName;
-    $destination = $uploadDir . $fotoName;
-    
-    // Pindahkan file yang diupload ke folder tujuan
-    if (!move_uploaded_file($tempName, $destination)) {
-        // Jika gagal upload
-        die("Gagal mengupload foto profil.");
-    }
+if (!file_exists($uploadDir)) {
+    mkdir($uploadDir, 0777, true);
 }
 
-// Buat query base untuk update profile
-// Periksa apakah foto baru diupload
-if ($fotoName !== null) {
-    // Update dengan foto
-    $sql = "UPDATE user 
-            SET nama = ?, username = ?, telepon = ?, foto = ?, bio = ?
-            WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssssi", $nama, $username, $telepon, $fotoName, $bio, $user_id);
+// Ambil data user yang ada
+$stmt = $conn->prepare("SELECT foto FROM user WHERE id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$user = $result->fetch_assoc();
+$old_foto = $user['foto'];
+
+// Handle upload foto
+if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+    $file = $_FILES['foto'];
+    
+    // Validasi tipe file
+    $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!in_array($file['type'], $allowed_types)) {
+        $_SESSION['error_msg'] = "Tipe file tidak didukung. Gunakan JPG, PNG, atau GIF.";
+        header("Location: ../pages/profile.php");
+        exit();
+    }
+
+    // Validasi ukuran file (max 5MB)
+    if ($file['size'] > 5 * 1024 * 1024) {
+        $_SESSION['error_msg'] = "Ukuran file terlalu besar. Maksimal 5MB.";
+        header("Location: ../pages/profile.php");
+        exit();
+    }
+
+    // Generate nama file yang unik
+    $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $newFileName = uniqid() . '_' . time() . '.' . $fileExt;
+    $destination = $uploadDir . $newFileName;
+
+    // Pindahkan file
+    if (move_uploaded_file($file['tmp_name'], $destination)) {
+        // Hapus foto lama jika ada
+        if ($old_foto && file_exists($uploadDir . $old_foto)) {
+            unlink($uploadDir . $old_foto);
+        }
+        
+        // Update database dengan foto baru
+        $sql = "UPDATE user SET nama = ?, username = ?, telepon = ?, bio = ?, foto = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssssi", $nama, $username, $telepon, $bio, $newFileName, $user_id);
+    } else {
+        $_SESSION['error_msg'] = "Gagal mengupload file. Silakan coba lagi.";
+        header("Location: ../pages/profile.php");
+        exit();
+    }
 } else {
-    // Update tanpa mengganti foto
-    $sql = "UPDATE user 
-            SET nama = ?, username = ?, telepon = ?, bio = ?
-            WHERE id = ?";
+    // Update tanpa foto
+    $sql = "UPDATE user SET nama = ?, username = ?, telepon = ?, bio = ? WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ssssi", $nama, $username, $telepon, $bio, $user_id);
 }
 
-// Jalankan query
+// Eksekusi query
 if ($stmt->execute()) {
-    // Berhasil update
-    header("Location: ../pages/profile.php?status=updated");
+    $_SESSION['success_msg'] = "Profil berhasil diperbarui!";
+    header("Location: ../pages/profile.php");
     exit();
 } else {
-    die("Terjadi kesalahan saat mengupdate profil: " . $conn->error);
+    $_SESSION['error_msg'] = "Gagal memperbarui profil: " . $conn->error;
+    header("Location: ../pages/profile.php");
+    exit();
 }
+
+$stmt->close();
+$conn->close();
+?>

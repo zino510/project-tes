@@ -294,7 +294,7 @@ $user = $result->fetch_assoc();
             <textarea name='bio' id='bio' class='form-control' rows='4' placeholder="Ceritakan sedikit tentang diri Anda..."><?php echo htmlspecialchars($user['bio']); ?></textarea>
         </div>
 
-        <input type='file' name='foto' id='foto' class='form-control d-none' accept="image/*">
+        <input type='file' name='foto' id='foto' accept="image/*" style="display: none;">
 
         <div class="d-flex gap-2">
             <a href="../pages/dashboard.php" class="btn btn-secondary">

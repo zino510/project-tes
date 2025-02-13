@@ -1,36 +1,102 @@
+<?php
+session_start();
+date_default_timezone_set('UTC');
+$current_time = date('Y-m-d H:i:s');
+$current_user = isset($_SESSION['user_login']) ? $_SESSION['user_login'] : 'Guest';
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
-
-<link rel="icon" type="image/x-icon" href="favicon.ico">
-<link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-
+<script src="https://unpkg.com/@tailwindcss/browser@4"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Duomart - Future of Shopping</title>
+    <title>DuoMart - Future of Shopping</title>
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico">
+    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+    
+    <!-- Fonts and Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --primary: #2563eb;
-            --secondary: #7c3aed;
+            --primary: #3b82f6;
+            --secondary: #8b5cf6;
             --accent: #06b6d4;
             --background: #0f172a;
-            --text-light: #e2e8f0;
+            --text-light: #f8fafc;
             --text-dark: #1e293b;
         }
 
+        /* Global Styles */
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, var(--background), #1e293b);
+            background: var(--background);
             color: var(--text-light);
             overflow-x: hidden;
         }
 
+        /* Animated Background */
+        .animated-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            filter: blur(100px);
+            opacity: 0.15;
+            animation: floatAnimation 20s infinite ease-in-out;
+        }
+
+        .particle:nth-child(1) {
+            top: -150px;
+            left: -150px;
+            animation-delay: 0s;
+        }
+
+        .particle:nth-child(2) {
+            top: 50%;
+            right: -150px;
+            animation-delay: -5s;
+        }
+
+        .particle:nth-child(3) {
+            bottom: -150px;
+            left: 50%;
+            animation-delay: -10s;
+        }
+
+        @keyframes floatAnimation {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(100px, 100px) rotate(90deg);
+            }
+            50% {
+                transform: translate(0, 200px) rotate(180deg);
+            }
+            75% {
+                transform: translate(-100px, 100px) rotate(270deg);
+            }
+        }
+
         /* Navbar Styles */
         .navbar {
-            background: rgba(255, 255, 255, 0.1) !important;
+            background: rgba(15, 23, 42, 0.8);
             backdrop-filter: blur(10px);
             padding: 1rem 0;
             transition: all 0.3s ease;
@@ -40,8 +106,9 @@
             font-weight: 700;
             font-size: 1.5rem;
             color: var(--text-light) !important;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .nav-link {
@@ -51,241 +118,157 @@
             margin: 0 0.5rem;
             border-radius: 8px;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .nav-link:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
+        .btn-dashboard {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white !important;
+            padding: 0.5rem 1.5rem !important;
         }
 
         /* Hero Section */
         .hero-section {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
+            padding: 160px 0 100px;
             position: relative;
-            overflow: hidden;
-            padding: 100px 0;
-        }
-
-        .hero-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, rgba(37, 99, 235, 0.1), rgba(124, 58, 237, 0.1));
-            z-index: -1;
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 1;
         }
 
         .hero-title {
-            font-size: 4rem;
+            font-size: 3.5rem;
             font-weight: 700;
             margin-bottom: 1.5rem;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
+            line-height: 1.2;
+        }
+
+        .hero-title .highlight {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: titleAnimation 2s ease-in-out infinite alternate;
         }
 
         .hero-subtitle {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             margin-bottom: 2rem;
             opacity: 0.9;
         }
 
-        /* Animated Button */
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
         .btn-custom {
             background: linear-gradient(45deg, var(--primary), var(--secondary));
-            color: white;
             border: none;
-            border-radius: 30px;
             padding: 1rem 2rem;
+            border-radius: 50px;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            position: relative;
-            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .btn-custom:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
             color: white;
+            text-decoration: none;
         }
 
-        .btn-custom::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, var(--secondary), var(--accent));
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .btn-custom:hover::before {
-            opacity: 1;
-        }
-
-        /* Info Section */
-        .info-section {
-            padding: 100px 0;
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            margin: 50px 0;
-        }
-
-        .info-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 2rem;
+        .btn-learn {
+            border: 2px solid rgba(255,255,255,0.1);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             transition: all 0.3s ease;
-            height: 100%;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
         }
 
-        .info-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        .hero-stats {
+            display: flex;
+            gap: 3rem;
         }
 
-        .info-card i {
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
             background: linear-gradient(45deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .info-card h3 {
-            font-size: 1.5rem;
-            font-weight: 600;
+        .stat-item p {
+            opacity: 0.7;
+            margin: 0;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 100px 0;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .section-header {
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
             margin-bottom: 1rem;
-            color: var(--text-light);
         }
 
-        .info-card p {
-            font-size: 1rem;
-            color: var(--text-light);
-            opacity: 0.8;
+        .feature-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            height: 100%;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
-        /* Animations */
-        @keyframes titleAnimation {
-            from {
-                transform: translateY(0);
-            }
-            to {
-                transform: translateY(-5px);
-            }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255,255,255,0.08);
         }
 
-        /* Floating Elements Animation */
-        .floating-element {
-            position: absolute;
-            border-radius: 50%;
+        .feature-icon {
+            width: 60px;
+            height: 60px;
             background: linear-gradient(45deg, var(--primary), var(--secondary));
-            opacity: 0.1;
-            animation: float 15s infinite linear;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
         }
 
-        @keyframes float {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            100% { transform: translate(400px, -400px) rotate(360deg); }
+        .feature-icon i {
+            font-size: 1.5rem;
+            color: white;
         }
 
-          /* Tambahan CSS untuk Mobile Responsiveness */
-          @media (max-width: 768px) {
-            /* Navbar Mobile */
-            .navbar {
-                padding: 0.5rem 1rem;
-            }
-
-            .navbar-brand {
-                font-size: 1.2rem;
-            }
-
-            .navbar-collapse {
-                background: rgba(15, 23, 42, 0.95);
-                padding: 1rem;
-                border-radius: 10px;
-                margin-top: 1rem;
-            }
-
-            .nav-link {
-                margin: 0.5rem 0;
-                text-align: center;
-            }
-
-            /* Hero Section Mobile */
-            .hero-section {
-                padding: 60px 0;
-                min-height: 80vh;
-            }
-
-            .hero-title {
-                font-size: 2.5rem;
-                margin-bottom: 1rem;
-            }
-
-            .hero-subtitle {
-                font-size: 1.1rem;
-                padding: 0 1rem;
-            }
-
-            .btn-custom {
-                padding: 0.8rem 1.5rem;
-                font-size: 0.9rem;
-            }
-
-            /* Info Section Mobile */
-            .info-section {
-                padding: 40px 0;
-                margin: 20px 0;
-            }
-
-            .info-card {
-                margin: 0 1rem;
-                padding: 1.5rem;
-            }
-
-            .info-card i {
-                font-size: 2rem;
-            }
-
-            .info-card h3 {
-                font-size: 1.2rem;
-            }
-
-            .info-card p {
-                font-size: 0.9rem;
-            }
-
-            /* Floating Elements Mobile */
-            .floating-element {
-                display: none; /* Hide on mobile for better performance */
-            }
-
-            /* Container Spacing */
-            .container {
-                padding: 0 15px;
-            }
+        /* Current User Info */
+        .user-info {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255,255,255,0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
         }
 
-        /* Mobile Navigation Menu */
+        /* Mobile Menu */
         .mobile-menu {
             display: none;
             position: fixed;
@@ -294,96 +277,241 @@
             right: 0;
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(10px);
-            padding: 0.8rem;
+            padding: 1rem;
             z-index: 1000;
         }
 
-        .mobile-menu-items {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-        }
-
-        .mobile-menu-item {
+        .mobile-menu a {
             color: var(--text-light);
             text-decoration: none;
             text-align: center;
+            flex: 1;
             padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .mobile-menu-item i {
-            font-size: 1.2rem;
-            display: block;
-            margin-bottom: 0.2rem;
-        }
+        /* Responsive Styles */
+        @media (max-width: 991px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
 
-        .mobile-menu-item span {
-            font-size: 0.8rem;
-        }
+            .hero-image {
+                margin-top: 3rem;
+            }
 
-        @media (max-width: 768px) {
             .mobile-menu {
-                display: block;
+                display: flex;
             }
 
             body {
-                padding-bottom: 70px; /* Space for mobile menu */
+                padding-bottom: 80px;
             }
 
-            /* Hide desktop navbar items on mobile */
-            .navbar-nav {
+            .user-info {
                 display: none;
             }
         }
 
-        /* Additional Mobile Optimizations */
-        @media (max-width: 480px) {
-            .hero-title {
-                font-size: 2rem;
+        @media (max-width: 768px) {
+            .hero-buttons {
+                flex-direction: column;
             }
 
-            .hero-subtitle {
-                font-size: 1rem;
+            .hero-stats {
+                flex-direction: column;
+                gap: 1.5rem;
             }
 
-            .info-card {
-                margin: 0 0.5rem;
+            .feature-card {
+                margin-bottom: 1.5rem;
             }
         }
+
+        /* Live Time Display */
+.live-time-display {
+    position: fixed;
+    top: 5rem;
+    right: 1rem;
+    background: linear-gradient(45deg, var(--primary), var(--secondary));
+    padding: 1rem 1.5rem;
+    border-radius: 15px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.live-time-display .date {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.live-time-display .time {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .live-time-display {
+        top: auto;
+        bottom: 5rem;
+        right: 1rem;
+        font-size: 0.9rem;
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* Rating Section Styles */
+.rating-section {
+    background: rgba(255,255,255,0.02);
+    margin-top: 2rem;
+}
+
+.rating-overview-card, 
+.rate-now-card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 20px;
+    padding: 2rem;
+    height: 100%;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: transform 0.3s ease;
+}
+
+.rating-overview-card:hover, 
+.rate-now-card:hover {
+    transform: translateY(-5px);
+}
+
+.overall-rating {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.overall-rating h3 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(45deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.stars {
+    color: #ffd700;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.rating-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.rating-bar-item .progress {
+    flex: 1;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+}
+
+.rating-bar-item .progress-bar {
+    background: linear-gradient(45deg, var(--primary), var(--secondary));
+    border-radius: 4px;
+}
+
+.rate-now-card {
+    text-align: center;
+}
+
+.rating-stars {
+    font-size: 2rem;
+    color: #ffd700;
+}
+
+.rating-stars i {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.rating-stars i:hover,
+.rating-stars i.active {
+    transform: scale(1.2);
+}
+
+.rate-now-card textarea {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-light);
+    resize: none;
+    height: 100px;
+}
+
+.rate-now-card textarea:focus {
+    background: rgba(255,255,255,0.08);
+    border-color: var(--primary);
+    box-shadow: none;
+    color: var(--text-light);
+}
     </style>
 </head>
 <body>
-    <!-- Floating Background Elements -->
-    <div class="floating-element" style="width: 300px; height: 300px; top: 10%; left: -150px;"></div>
-    <div class="floating-element" style="width: 200px; height: 200px; top: 60%; right: -100px;"></div>
+    <!-- User Info -->
+<div class="user-info">
+    <i class="fas fa-user-circle me-2"></i>
+    <?php echo htmlspecialchars($current_user); ?> | 
+    <span id="live-time"></span>
+</div>
+    <!-- Animated Background -->
+    <div class="animated-background">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
             <a class="navbar-brand" href="#">
-                <i class="fas fa-shopping-bag me-2"></i>
-                Duomart
+                <i class="fas fa-shopping-bag"></i>
+                DuoMart
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+                <i class="fas fa-bars"></i>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    <?php if($current_user === 'Guest'): ?>
                     <li class="nav-item">
                         <a class="nav-link" href="pages/login.php">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Login</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="pages/register.php">
-                            <i class="fas fa-user-plus me-2"></i>Register
+                            <i class="fas fa-user-plus"></i>
+                            <span>Register</span>
                         </a>
                     </li>
+                    <?php else: ?>
                     <li class="nav-item">
-                        <a class="nav-link" href="pages/dashboard.php">
-                            <i class="fas fa-chart-line me-2"></i>Dashboard
+                        <a class="nav-link btn-dashboard" href="pages/dashboard.php">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Dashboard</span>
                         </a>
                     </li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>
@@ -391,96 +519,305 @@
 
     <!-- Hero Section -->
     <section class="hero-section">
-        <div class="container hero-content text-center">
-            <h1 class="hero-title">Welcome to DuoMart</h1>
-            <p class="hero-subtitle">Discover a new way of buying and selling in our innovative marketplace</p>
-            <a class="btn btn-custom btn-lg" href="pages/register.php">
-                <span class="position-relative">
-                    <i class="fas fa-rocket me-2"></i>
-                    Start Your Journey
-                </span>
-            </a>
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 hero-content">
+                    <h1 class="hero-title">
+                        Transform Your <span class="highlight">Shopping</span> Experience
+                    </h1>
+                    <p class="hero-subtitle">
+                        Join thousands of satisfied users in the next generation of online marketplace. Buy, sell, and connect like never before.
+                    </p>
+                    <div class="hero-buttons">
+                        <?php if($current_user === 'Guest'): ?>
+                        <a href="pages/register.php" class="btn-custom">
+                            <i class="fas fa-rocket"></i>
+                            Get Started
+                        </a>
+                        <?php else: ?>
+                        <a href="pages/dashboard.php" class="btn-custom">
+                            <i class="fas fa-chart-line"></i>
+                            Go to Dashboard
+                        </a>
+                        <?php endif; ?>
+                        <a href="#features" class="btn-learn">
+                            <i class="fas fa-play"></i>
+                            Learn More
+                        </a>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <h3>10K+</h3>
+                            <p>Active Users</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>50K+</h3>
+                            <p>Products</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>99%</h3>
+                            <p>Satisfaction</p>
+                        </div>
+                    </div>
+                </div>
+               
+            </div>
         </div>
     </section>
 
-    <!-- Info Sections -->
+<!-- Rating Section -->
+<section class="rating-section py-5">
     <div class="container">
-        <div class="info-section">
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="info-card">
-                        <i class="fas fa-gift"></i>
-                        <h3>Exclusive Benefits</h3>
-                        <p>Join now and enjoy premium features, special deals, and a seamless shopping experience that puts you ahead of the curve.</p>
+        <div class="section-header text-center mb-5">
+            <h2>Customer Ratings</h2>
+            <p>See what our community thinks about DuoMart</p>
+        </div>
+        
+        <div class="row justify-content-center">
+            <!-- Overall Rating Card -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="rating-overview-card">
+                    <div class="overall-rating">
+                        <h3>4.8</h3>
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <p>Based on 2,456 reviews</p>
+                    </div>
+                    <div class="rating-bars">
+                        <div class="rating-bar-item">
+                            <span>5</span>
+                            <div class="progress">
+                                <div class="progress-bar" style="width: 75%"></div>
+                            </div>
+                            <span>1,842</span>
+                        </div>
+                        <div class="rating-bar-item">
+                            <span>4</span>
+                            <div class="progress">
+                                <div class="progress-bar" style="width: 15%"></div>
+                            </div>
+                            <span>368</span>
+                        </div>
+                        <div class="rating-bar-item">
+                            <span>3</span>
+                            <div class="progress">
+                                <div class="progress-bar" style="width: 7%"></div>
+                            </div>
+                            <span>172</span>
+                        </div>
+                        <div class="rating-bar-item">
+                            <span>2</span>
+                            <div class="progress">
+                                <div class="progress-bar" style="width: 2%"></div>
+                            </div>
+                            <span>49</span>
+                        </div>
+                        <div class="rating-bar-item">
+                            <span>1</span>
+                            <div class="progress">
+                                <div class="progress-bar" style="width: 1%"></div>
+                            </div>
+                            <span>25</span>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="info-card">
-                        <i class="fas fa-cube"></i>
-                        <h3>Diverse Categories</h3>
-                        <p>Explore our vast selection of products across multiple categories, from cutting-edge technology to trending fashion items.</p>
+            </div>
+
+            <!-- Rate Now Card -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="rate-now-card">
+                    <h3>Rate Your Experience</h3>
+                    <div class="rating-stars mb-4">
+                        <i class="far fa-star" data-rating="1"></i>
+                        <i class="far fa-star" data-rating="2"></i>
+                        <i class="far fa-star" data-rating="3"></i>
+                        <i class="far fa-star" data-rating="4"></i>
+                        <i class="far fa-star" data-rating="5"></i>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="info-card">
-                        <i class="fas fa-shield-alt"></i>
-                        <h3>Secure Transactions</h3>
-                        <p>Shop with confidence knowing your transactions are protected by state-of-the-art security systems and dedicated support.</p>
-                    </div>
+                    <form id="rating-form">
+                        <textarea class="form-control mb-3" placeholder="Share your experience (optional)"></textarea>
+                        <?php if($current_user === 'Guest'): ?>
+                            <button type="button" class="btn-custom w-100" onclick="location.href='pages/login.php'">
+                                Login to Rate
+                            </button>
+                        <?php else: ?>
+                            <button type="submit" class="btn-custom w-100">
+                                Submit Rating
+                            </button>
+                        <?php endif; ?>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
+</section>
 
-    <!-- Add Mobile Bottom Navigation -->
-    <div class="mobile-menu">
-        <div class="mobile-menu-items">
-            <a href="#" class="mobile-menu-item">
-                <i class="fas fa-home"></i>
-                <span>Home</span>
-            </a>
-            <a href="pages/login.php" class="mobile-menu-item">
-                <i class="fas fa-sign-in-alt"></i>
-                <span>Login</span>
-            </a>
-            <a href="pages/register.php" class="mobile-menu-item">
-                <i class="fas fa-user-plus"></i>
-                <span>Register</span>
-            </a>
-            <a href="pages/dashboard.php" class="mobile-menu-item">
-                <i class="fas fa-chart-line"></i>
-                <span>Dashboard</span>
-            </a>
-        </div>
-    </div>
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-header text-center">
+                <h2>Why Choose DuoMart?</h2>
+                <p>Experience the future of online shopping with our innovative features</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Secure Transactions</h3>
+                        <p>Advanced encryption and secure payment methods to protect your transactions</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h3>Fast Delivery</h3>
+                        <p>Quick and reliable delivery service to get your products as soon as possible</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <h3>24/7 Support</h3>
+                        <p>Dedicated customer support team ready to assist you anytime</p>
 
-    <!-- Modify Hero Section for better mobile display -->
-    <section class="hero-section">
-        <div class="container hero-content text-center">
-            <h1 class="hero-title">Welcome to<br>DuoMart</h1>
-            <p class="hero-subtitle">Discover a new way of buying and selling in our innovative marketplace</p>
-            <a class="btn btn-custom" href="pages/register.php">
-                <span class="position-relative">
-                    <i class="fas fa-rocket me-2"></i>
-                    Start Now
-                </span>
-            </a>
-        </div>
-    </section>
 
-    <!-- Rest of the content remains the same -->
+                        <script>
+// Live Time Update
+function updateTime() {
+    const now = new Date();
+    
+    // Format date
+    const dateOptions = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    };
+    const dateStr = now.toLocaleDateString('en-US', dateOptions);
+    
+    // Format time
+    const timeOptions = { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit', 
+        hour12: false 
+    };
+    const timeStr = now.toLocaleTimeString('en-US', timeOptions);
+    
+    // Update DOM
+    document.getElementById('live-date').textContent = dateStr;
+    document.getElementById('live-time').textContent = timeStr;
 
-    <script>
-        // Add scroll behavior for navbar
-        window.addEventListener('scroll', function() {
-            const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 50) {
-                navbar.style.background = 'rgba(15, 23, 42, 0.95) !important';
+    // Add animation class every second
+    document.querySelector('.live-time-display').classList.add('pulse');
+    setTimeout(() => {
+        document.querySelector('.live-time-display').classList.remove('pulse');
+    }, 500);
+}
+
+// Update immediately and then every second
+updateTime();
+setInterval(updateTime, 1000);
+
+// Add pulse animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); }
+    }
+    .pulse {
+        animation: pulse 0.5s ease-in-out;
+    }
+    .live-time-display {
+        transition: transform 0.3s ease;
+    }
+    .live-time-display:hover {
+        transform: scale(1.05);
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize tooltips if using Bootstrap
+if(typeof bootstrap !== 'undefined') {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+}
+
+
+// Rating Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const ratingStars = document.querySelectorAll('.rating-stars i');
+    let selectedRating = 0;
+
+    ratingStars.forEach(star => {
+        star.addEventListener('mouseover', function() {
+            const rating = this.dataset.rating;
+            highlightStars(rating);
+        });
+
+        star.addEventListener('mouseleave', function() {
+            highlightStars(selectedRating);
+        });
+
+        star.addEventListener('click', function() {
+            selectedRating = this.dataset.rating;
+            highlightStars(selectedRating);
+        });
+    });
+
+    function highlightStars(rating) {
+        ratingStars.forEach(star => {
+            const starRating = star.dataset.rating;
+            if (starRating <= rating) {
+                star.classList.remove('far');
+                star.classList.add('fas');
             } else {
-                navbar.style.background = 'rgba(255, 255, 255, 0.1) !important';
+                star.classList.remove('fas');
+                star.classList.add('far');
             }
         });
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    }
+
+    // Handle form submission
+    const ratingForm = document.getElementById('rating-form');
+    if (ratingForm) {
+        ratingForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (selectedRating === 0) {
+                alert('Please select a rating');
+                return;
+            }
+            
+            const feedback = this.querySelector('textarea').value;
+            // Here you would typically send the rating and feedback to your server
+            console.log('Rating:', selectedRating, 'Feedback:', feedback);
+            
+            // Show success message
+            alert('Thank you for your rating!');
+            
+            // Reset form
+            selectedRating = 0;
+            highlightStars(0);
+            this.reset();
+        });
+    }
+});
+</script>
+
+
+                    

@@ -10,6 +10,22 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
+// Update status transaksi jika ada permintaan
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
+    $transaction_id = $_POST['transaction_id'];
+    $new_status = $_POST['new_status'];
+
+    $stmt = $conn->prepare("UPDATE transactions SET status = ? WHERE id = ? AND id IN (SELECT td.transaction_id FROM transaction_details td JOIN product p ON td.product_id = p.id WHERE p.user_id = ?)");
+    $stmt->bind_param("sii", $new_status, $transaction_id, $user_id);
+    if ($stmt->execute()) {
+        header("Location: transaksi.php");
+        exit();
+    } else {
+        echo "Error updating status: " . $stmt->error;
+    }
+    $stmt->close();
+}
+
 // Ambil data pesanan (produk yang dijual oleh user)
 $pesanan_query = "
     SELECT t.id as transaction_id, t.user_id as buyer_id, t.total_harga, t.status, t.created_at, 
@@ -236,9 +252,55 @@ $pembelian_result = $conn->query($pembelian_query);
                         <i class="fas fa-info-circle me-2"></i>Detail Transaksi
                     </button>
 
-                    <!-- Modal structure remains the same but with enhanced styling -->
+                    <!-- Modal structure -->
                     <div class="modal fade" id="pesananDetailModal<?php echo $row['transaction_id']; ?>" tabindex="-1" aria-hidden="true">
-                        <!-- Your existing modal content with added icons -->
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Detail Transaksi</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="info-item">
+                                        <i class="fas fa-align-left"></i>
+                                        <span>Deskripsi: <?php echo htmlspecialchars($row['deskripsi']); ?></span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-tag"></i>
+                                        <span>Harga: Rp <?php echo number_format($row['product_price'], 0, ',', '.'); ?></span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-shopping-basket"></i>
+                                        <span>Quantity: <?php echo $row['quantity']; ?></span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                        <span>Total: Rp <?php echo number_format($row['total_harga'], 0, ',', '.'); ?></span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-user"></i>
+                                        <span>Pembeli: <?php echo htmlspecialchars($row['buyer_name']); ?></span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-envelope"></i>
+                                        <span>Email Pembeli: <?php echo htmlspecialchars($row['buyer_email']); ?></span>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                <form method="post" action="../pages/update_status.php">
+                                    <input type="hidden" name="transaction_id" value="<?php echo $row['transaction_id']; ?>">
+                                    <select name="new_status" class="form-select">
+                                        <option value="pending" <?php echo $row['status'] === 'pending' ? 'selected' : ''; ?>>Pending</option>
+                                        <option value="dibayar" <?php echo $row['status'] === 'dibayar' ? 'selected' : ''; ?>>Dibayar</option>
+                                        <option value="dikirim" <?php echo $row['status'] === 'dikirim' ? 'selected' : ''; ?>>Dikirim</option>
+                                        <option value="selesai" <?php echo $row['status'] === 'selesai' ? 'selected' : ''; ?>>Selesai</option>
+                                        <option value="dibatalkan" <?php echo $row['status'] === 'dibatalkan' ? 'selected' : ''; ?>>Dibatalkan</option>
+                                    </select>
+                                    <button type="submit" name="update_status" class="btn btn-primary mt-3">Update Status</button>
+                                </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
