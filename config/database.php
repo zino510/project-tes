@@ -2,7 +2,7 @@
 // config/database.php
 $host = "localhost";
 $user = "root";
-$password = "";
+$password = "zin1234";
 $dbname = "marketplace";
 
 $conn = new mysqli($host, $user, $password, $dbname);
