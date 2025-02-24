@@ -277,7 +277,7 @@ $user = $result->fetch_assoc();
             </div>
         </div>
 
-        <div class='row'>
+        <div class='col-md-6 mb-3'>
             <div class='col-md-6 mb-3'>
                 <label for='telepon' class='form-label'>Nomor Telepon</label>
                 <input type='text' name='telepon' id='telepon' class='form-control' value="<?php echo htmlspecialchars($user['telepon']); ?>">

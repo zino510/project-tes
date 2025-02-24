@@ -4,8 +4,8 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<link rel="icon" type="image/x-icon" href="../favicon/favicon.ico">
-<link rel="shortcut icon" href="../favicon/favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/x-icon" href="../favicon/favicon.ico">
+    <link rel="shortcut icon" href="../favicon/favicon.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DuoMart - Register</title>
@@ -164,52 +164,6 @@
             font-weight: 600;
         }
 
-        .social-login {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            justify-content: center;
-        }
-
-        .social-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #e2e8f0;
-            color: var(--gray);
-            transition: all 0.3s ease;
-        }
-
-        .social-btn:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-            transform: translateY(-3px);
-        }
-
-        html {
-            height: -webkit-fill-available;
-            overflow: hidden;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            min-height: 100vh;
-            min-height: -webkit-fill-available;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: fixed;
-            width: 100%;
-            overflow: hidden;
-        }
-
         /* Mobile Optimizations */
         @media (max-width: 768px) {
             body {
@@ -257,7 +211,6 @@
                 margin-bottom: 0.5rem;
             }
 
-            /* Form Optimizations */
             .form-group {
                 margin-bottom: 0.8rem;
             }
@@ -278,7 +231,6 @@
                 right: 0.5rem;
             }
 
-            /* Button Optimizations */
             .btn-register {
                 height: 48px;
                 display: flex;
@@ -293,51 +245,6 @@
                 font-size: 0.85rem;
                 padding-bottom: env(safe-area-inset-bottom);
             }
-        }
-
-        /* Additional Mobile Improvements */
-        @media (max-height: 667px) {
-            .register-container {
-                padding: 1rem;
-            }
-
-            .logo-container {
-                margin-bottom: 0.5rem;
-            }
-        }
-
-        /* Touch Optimizations */
-        .form-control, .btn-register, .password-toggle {
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* Scrollbar Styling */
-        .register-container {
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .register-container::-webkit-scrollbar {
-            display: none;
-        }
-
-        /* Input Autofill Styling */
-        input:-webkit-autofill {
-            -webkit-box-shadow: 0 0 0 30px white inset !important;
-        }
-
-        /* Active States */
-        .btn-register:active {
-            transform: scale(0.98);
-        }
-
-        /* Focus States */
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
     </style>
 </head>
@@ -370,6 +277,12 @@
                 <input type="text" class="form-control" name="username" placeholder="Username" required>
                 <i class="fas fa-at form-icon"></i>
                 <div class="invalid-feedback">Please choose a username.</div>
+            </div>
+
+            <div class="form-group">
+                <input type="tel" class="form-control" name="telepon" placeholder="Phone Number" pattern="[0-9]{10,15}" required>
+                <i class="fas fa-phone form-icon"></i>
+                <div class="invalid-feedback">Please enter a valid phone number (10-15 digits).</div>
             </div>
 
             <div class="form-group">
@@ -416,8 +329,6 @@
                 }, false)
             })
         })()
-
-        
     </script>
 </body>
 </html>

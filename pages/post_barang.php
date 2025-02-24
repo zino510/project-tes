@@ -12,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $deskripsi = $_POST['deskripsi'];
     $harga = $_POST['harga'];
     $kategori = $_POST['kategori'];
+    $kondisi = $_POST['kondisi'];
     $user_id = $_SESSION['user_id'];
 
     $upload_dir = "../uploads/";
@@ -22,8 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $gambar_path = $upload_dir . basename($_FILES['gambar']['name']);
     if (move_uploaded_file($_FILES['gambar']['tmp_name'], $gambar_path)) {
         $gambar = "uploads/" . basename($_FILES['gambar']['name']);
-        $stmt = $conn->prepare("INSERT INTO product (nama_produk, deskripsi, harga, kategori, gambar, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
-        $stmt->bind_param("ssdssi", $nama_produk, $deskripsi, $harga, $kategori, $gambar, $user_id);
+        $stmt = $conn->prepare("INSERT INTO product (nama_produk, deskripsi, harga, kategori, kondisi, gambar, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
+        $stmt->bind_param("ssdsssi", $nama_produk, $deskripsi, $harga, $kategori, $kondisi, $gambar, $user_id);
 
         if ($stmt->execute()) {
             header("Location: ../pages/dashboard.php");
@@ -38,9 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-<link rel="icon" type="image/x-icon" href="../favicon/favicon.ico">
-<link rel="shortcut icon" href="../favicon/favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/x-icon" href="../favicon/favicon.ico">
+    <link rel="shortcut icon" href="../favicon/favicon.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jual Barang - Duo Mart</title>
@@ -207,9 +209,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes float {
-            0% { transform: translate(0, 0); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: translate(100px, -100px); opacity: 0; }
+            0% {
+                transform: translate(0, 0);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(100px, -100px);
+                opacity: 0;
+            }
         }
 
         /* Custom File Input */
@@ -240,10 +252,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         /* Animation */
         @keyframes fadeInUp {
-            from { 
+            from {
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -262,6 +275,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </style>
 </head>
+
 <body>
     <!-- Floating Particles -->
     <div id="particles"></div>
@@ -272,7 +286,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="form-container">
                     <h2 class="page-title">
                         <i class="fas fa-store me-2"></i>
-                        Jual Barang Baru
+                        Jual Barang
                     </h2>
 
                     <form action="post_barang.php" method="POST" enctype="multipart/form-data" id="productForm">
@@ -281,8 +295,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <i class="fas fa-box me-2"></i>
                                 Nama Barang
                             </label>
-                            <input type="text" name="nama_produk" class="form-control" 
-                                   placeholder="Masukkan nama barang" required>
+                            <input type="text" name="nama_produk" class="form-control"
+                                placeholder="Masukkan nama barang" required>
                         </div>
 
                         <div class="mb-4">
@@ -290,8 +304,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <i class="fas fa-align-left me-2"></i>
                                 Deskripsi
                             </label>
-                            <textarea name="deskripsi" class="form-control" rows="4" 
-                                    placeholder="Jelaskan detail barang" required></textarea>
+                            <textarea name="deskripsi" class="form-control" rows="4"
+                                placeholder="Jelaskan detail barang" required></textarea>
                         </div>
 
                         <div class="row mb-4">
@@ -300,8 +314,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <i class="fas fa-tag me-2"></i>
                                     Harga (Rp)
                                 </label>
-                                <input type="number" name="harga" class="form-control" 
-                                       placeholder="Masukkan harga" required>
+                                <input type="number" name="harga" class="form-control" placeholder="Masukkan harga"
+                                    required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">
@@ -318,34 +332,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </select>
                             </div>
                         </div>
-
-                        <div class="mb-4">
-                            <div class="image-preview" id="imagePreview">
-                                <div class="placeholder">
-                                    <i class="fas fa-image fa-3x mb-2"></i>
-                                    <p>Preview Gambar</p>
+                        <div class="mb-3">
+                            <label class="form-label">Kondisi</label>
+                            <select name="kondisi" class="form-control" required>
+                                <option value="">Pilih Kondisi</option>
+                                <option value="Baru">Baru</option>
+                                <option value="Bekas">Bekas</option>
+                            </select>
+                            <div class="mb-4">
+                                <div class="image-preview" id="imagePreview">
+                                    <div class="placeholder">
+                                        <i class="fas fa-image fa-3x mb-2"></i>
+                                        <p>Preview Gambar</p>
+                                    </div>
+                                </div>
+                                <div class="file-upload">
+                                    <label class="file-upload-label">
+                                        <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
+                                        <p class="mb-0">Klik untuk memilih</p>
+                                        <input type="file" name="gambar" accept="image/*" required
+                                            onchange="previewImage(this);">
+                                    </label>
                                 </div>
                             </div>
-                            <div class="file-upload">
-                                <label class="file-upload-label">
-                                    <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
-                                    <p class="mb-0">Klik untuk memilih</p>
-                                    <input type="file" name="gambar" accept="image/*" required 
-                                           onchange="previewImage(this);">
-                                </label>
-                            </div>
-                        </div>
 
-                        <div class="d-flex gap-3">
-                            <a href="dashboard.php" class="btn btn-custom btn-back">
-                                <i class="fas fa-arrow-left me-2"></i>
-                                Kembali
-                            </a>
-                            <button type="submit" class="btn btn-custom w-100">
-                                <i class="fas fa-paper-plane me-2"></i>
-                                Jual Sekarang
-                            </button>
-                        </div>
+                            <div class="d-flex gap-3">
+                                <a href="dashboard.php" class="btn btn-custom btn-back">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Kembali
+                                </a>
+                                <button type="submit" class="btn btn-custom w-100">
+                                    <i class="fas fa-paper-plane me-2"></i>
+                                    Jual Sekarang
+                                </button>
+                            </div>
                     </form>
                 </div>
             </div>
@@ -358,10 +378,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         function previewImage(input) {
             const preview = document.getElementById('imagePreview');
             preview.innerHTML = '';
-            
+
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     const img = document.createElement('img');
                     img.src = e.target.result;
                     preview.appendChild(img);
@@ -390,7 +410,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Form validation
-        document.getElementById('productForm').onsubmit = function(e) {
+        document.getElementById('productForm').onsubmit = function (e) {
             const harga = document.querySelector('input[name="harga"]').value;
             if (harga <= 0) {
                 e.preventDefault();
@@ -404,4 +424,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         createParticles();
     </script>
 </body>
+
 </html>

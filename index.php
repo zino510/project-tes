@@ -373,98 +373,82 @@ $current_user = isset($_SESSION['user_login']) ? $_SESSION['user_login'] : 'Gues
     }
 }
 
-/* Rating Section Styles */
-.rating-section {
-    background: rgba(255,255,255,0.02);
-    margin-top: 2rem;
-}
-
-.rating-overview-card, 
-.rate-now-card {
-    background: rgba(255,255,255,0.05);
+/* Rating Styles */
+.rating-container {
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 20px;
     padding: 2rem;
-    height: 100%;
-    border: 1px solid rgba(255,255,255,0.1);
-    transition: transform 0.3s ease;
-}
-
-.rating-overview-card:hover, 
-.rate-now-card:hover {
-    transform: translateY(-5px);
-}
-
-.overall-rating {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.overall-rating h3 {
-    font-size: 3rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    background: linear-gradient(45deg, var(--primary), var(--secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .stars {
-    color: #ffd700;
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.rating-bar-item {
     display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 0.5rem;
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+    gap: 0.25rem;
 }
 
-.rating-bar-item .progress {
-    flex: 1;
-    height: 8px;
-    background: rgba(255,255,255,0.1);
+.stars input {
+    display: none;
 }
 
-.rating-bar-item .progress-bar {
-    background: linear-gradient(45deg, var(--primary), var(--secondary));
-    border-radius: 4px;
-}
-
-.rate-now-card {
-    text-align: center;
-}
-
-.rating-stars {
+.stars label {
     font-size: 2rem;
+    color: #666;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.stars label:hover,
+.stars label:hover ~ label,
+.stars input:checked ~ label {
     color: #ffd700;
 }
 
-.rating-stars i {
-    cursor: pointer;
-    transition: all 0.2s ease;
+.review {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.rating-stars i:hover,
-.rating-stars i.active {
-    transform: scale(1.2);
+.review .stars {
+    color: #ffd700;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
 }
 
-.rate-now-card textarea {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
+textarea.form-control {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-light);
-    resize: none;
-    height: 100px;
 }
 
-.rate-now-card textarea:focus {
-    background: rgba(255,255,255,0.08);
-    border-color: var(--primary);
+textarea.form-control:focus {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-light);
     box-shadow: none;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, var(--primary), var(--secondary));
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+}
+
+.alert {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-light);
 }
+
+.text-muted {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
     </style>
 </head>
 <body>
@@ -574,92 +558,163 @@ $current_user = isset($_SESSION['user_login']) ? $_SESSION['user_login'] : 'Gues
             <h2>Customer Ratings</h2>
             <p>See what our community thinks about DuoMart</p>
         </div>
-        
-        <div class="row justify-content-center">
-            <!-- Overall Rating Card -->
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="rating-overview-card">
-                    <div class="overall-rating">
-                        <h3>4.8</h3>
-                        <div class="stars">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
-                        </div>
-                        <p>Based on 2,456 reviews</p>
-                    </div>
-                    <div class="rating-bars">
-                        <div class="rating-bar-item">
-                            <span>5</span>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: 75%"></div>
-                            </div>
-                            <span>1,842</span>
-                        </div>
-                        <div class="rating-bar-item">
-                            <span>4</span>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: 15%"></div>
-                            </div>
-                            <span>368</span>
-                        </div>
-                        <div class="rating-bar-item">
-                            <span>3</span>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: 7%"></div>
-                            </div>
-                            <span>172</span>
-                        </div>
-                        <div class="rating-bar-item">
-                            <span>2</span>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: 2%"></div>
-                            </div>
-                            <span>49</span>
-                        </div>
-                        <div class="rating-bar-item">
-                            <span>1</span>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: 1%"></div>
-                            </div>
-                            <span>25</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Rate Now Card -->
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="rate-now-card">
-                    <h3>Rate Your Experience</h3>
-                    <div class="rating-stars mb-4">
-                        <i class="far fa-star" data-rating="1"></i>
-                        <i class="far fa-star" data-rating="2"></i>
-                        <i class="far fa-star" data-rating="3"></i>
-                        <i class="far fa-star" data-rating="4"></i>
-                        <i class="far fa-star" data-rating="5"></i>
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="rating-container">
+                    <?php
+                    // Koneksi ke database
+                    $conn = new mysqli("localhost", "root", "Zin1234", "marketplace");
+
+                    if ($conn->connect_error) {
+                        die("Connection failed: " . $conn->connect_error);
+                    }
+
+                    // Set karakter encoding
+                    $conn->set_charset("utf8mb4");
+
+                    // Handle form submission
+                    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id'])) {
+                        if (!isset($_POST["rating"])) {
+                            $error = "Rating harus dipilih!";
+                        } else {
+                            try {
+                                $rating = filter_var($_POST["rating"], FILTER_VALIDATE_INT);
+                                $review = trim($_POST["review"] ?? '');
+                                $user_id = $_SESSION['user_id'];
+                                $user_login = $_SESSION['user_login'] ?? 'Anonymous';
+
+                                if ($rating === false || $rating < 1 || $rating > 5) {
+                                    throw new Exception("Rating tidak valid");
+                                }
+
+                                $stmt = $conn->prepare("INSERT INTO ratings (user_id, user, rating, review, created_at) VALUES (?, ?, ?, ?, NOW())");
+                                if (!$stmt) {
+                                    throw new Exception("Prepare failed: " . $conn->error);
+                                }
+
+                                $stmt->bind_param("isis", $user_id, $user_login, $rating, $review);
+                                
+                                if (!$stmt->execute()) {
+                                    throw new Exception("Execute failed: " . $stmt->error);
+                                }
+
+                                $_SESSION['rating_success'] = true;
+                                header("Location: " . $_SERVER['PHP_SELF']);
+                                exit;
+                            } catch (Exception $e) {
+                                $error = $e->getMessage();
+                            }
+                        }
+                    }
+
+                    // Get average rating
+                    $stmt = $conn->prepare("SELECT ROUND(AVG(rating), 1) as avg_rating, COUNT(*) as total FROM ratings");
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $rating_data = $result->fetch_assoc();
+                    $average_rating = $rating_data['avg_rating'] ?? 0;
+                    $total_reviews = $rating_data['total'] ?? 0;
+                    $stmt->close();
+                    ?>
+
+                    <div class="rating-summary mb-4">
+                        <h3>⭐ <?php echo number_format($average_rating, 1); ?> 
+                            <small>(<?php echo $total_reviews; ?> reviews)</small>
+                        </h3>
                     </div>
-                    <form id="rating-form">
-                        <textarea class="form-control mb-3" placeholder="Share your experience (optional)"></textarea>
-                        <?php if($current_user === 'Guest'): ?>
-                            <button type="button" class="btn-custom w-100" onclick="location.href='pages/login.php'">
-                                Login to Rate
+
+                    <?php if(isset($_SESSION['user_id'])): ?>
+                        <form method="POST" id="ratingForm" class="mb-4">
+                            <div class="form-group">
+                                <label class="d-block mb-2">Rate Your Experience:</label>
+                                <div class="stars">
+                                    <?php for ($i = 5; $i >= 1; $i--): ?>
+                                        <input type="radio" name="rating" value="<?php echo $i; ?>" 
+                                               id="star<?php echo $i; ?>" required>
+                                        <label for="star<?php echo $i; ?>">&#9733;</label>
+                                    <?php endfor; ?>
+                                </div>
+                            </div>
+
+                            <div class="form-group mt-3">
+                                <label for="review" class="form-label">Your Review (Optional):</label>
+                                <textarea name="review" id="review" class="form-control" 
+                                          rows="3" placeholder="Share your experience..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary mt-3 w-100">
+                                Submit Review
                             </button>
-                        <?php else: ?>
-                            <button type="submit" class="btn-custom w-100">
-                                Submit Rating
-                            </button>
+                        </form>
+
+                        <?php if (isset($error)): ?>
+                            <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
                         <?php endif; ?>
-                    </form>
+
+                    <?php else: ?>
+                        <div class="alert alert-info">
+                            Please <a href="pages/login.php">login</a> to submit a review
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Reviews Section -->
+                    <div class="reviews-section">
+                        <h4 class="mb-3">Recent Reviews</h4>
+                        <?php
+                        $stmt = $conn->prepare("
+                            SELECT rating, review, user, created_at 
+                            FROM ratings 
+                            ORDER BY created_at DESC
+                        ");
+                        $stmt->execute();
+                        $reviews = $stmt->get_result();
+
+                        if ($reviews->num_rows > 0):
+                            while ($review = $reviews->fetch_assoc()):
+                                $user_display = $review['user'] ?? 'Anonymous';
+                                $review_text = $review['review'] ?? 'No comment';
+                                $created_date = date('d M Y, H:i', strtotime($review['created_at']));
+                        ?>
+                            <div class="review mb-3">
+                                <div class="stars">
+                                    <?php 
+                                    $rating = (int)$review['rating'];
+                                    for ($i = 1; $i <= 5; $i++) {
+                                        echo ($i <= $rating) ? "★" : "☆";
+                                    }
+                                    ?>
+                                </div>
+                                <p class="review-text mb-1"><?php echo htmlspecialchars($review_text); ?></p>
+                                <small class="text-muted">
+                                    By <?php echo htmlspecialchars($user_display); ?> 
+                                    on <?php echo $created_date; ?>
+                                </small>
+                            </div>
+                        <?php 
+                            endwhile;
+                        else: 
+                        ?>
+                            <p class="text-muted">No reviews yet. Be the first to review!</p>
+                        <?php 
+                        endif;
+                        $stmt->close();
+                        ?>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-    <!-- Features Section -->
+<?php
+// Close database connection
+if (isset($conn)) {
+    $conn->close();
+}
+?>
+
+<!-- Features Section -->
     <section id="features" class="features-section">
         <div class="container">
             <div class="section-header text-center">

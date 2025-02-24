@@ -2,727 +2,839 @@
 session_start();
 include '../config/database.php';
 
-// Cek jika user belum login
+// Di bagian awal file dashboard.php, setelah session_start()
 if (!isset($_SESSION['user_id'])) {
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Cache-Control: post-check=0, pre-check=0", false);
-    header("Pragma: no-cache");
-    
     header("Location: login.php");
     exit();
 }
 
+$user_id = $_SESSION['user_id'];
+$user_login = $_SESSION['user_login'] ?? '';
+
+// Check if user is not logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+    header("Location: login.php");
+    exit();
+}
+
+// Cache control headers
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 
-$result = $conn->query("SELECT * FROM product");
+// Get products sorted by newest first
+$result = $conn->query("SELECT * FROM product ORDER BY created_at DESC LIMIT 12");
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<link rel="icon" type="image/x-icon" href="../favicon/favicon.ico">
-<link rel="shortcut icon" href="../favicon/favicon.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Duo Mart</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <title>Dashboard - Duo Mart</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="../favicon/favicon.ico">
+    <link rel="shortcut icon" href="../favicon/favicon.ico" type="image/x-icon">
+    
+    <!-- CSS Libraries -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
-       :root {
-    --primary-color: #2980b9;
-    --accent-color: #3498db;
-    --danger-color: #e74c3c;
-    --success-color: #2ecc71;
-    --warning-color: #f1c40f;
-    --text-color: #2c3e50;
-    --light-bg: #ecf0f1;
-    --white: #ffffff;
-}
-
-body {
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, var(--light-bg) 0%, #d5e5ee 100%);
-    color: var(--text-color);
-    min-height: 100vh;
-}
-
-/* Navbar Styles */
-.navbar {
-    background: var(--white);
-    padding: 1rem 0;
-    box-shadow: 0 4px 20px rgba(52, 152, 219, 0.1);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
-
-.navbar-brand {
-    font-size: 1.8rem;
-    font-weight: 800;
-    background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: 1px;
-}
-
-.nav-link {
-    font-weight: 500;
-    color: var(--text-color) !important;
-    position: relative;
-    transition: all 0.3s ease;
-    padding: 0.5rem 1rem !important;
-}
-
-.nav-link::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    width: 0;
-    height: 2px;
-    background: var(--primary-color);
-    transition: all 0.3s ease;
-    transform: translateX(-50%);
-}
-
-.nav-link:hover::after {
-    width: 80%;
-}
-
-/* Button Styles */
-.btn-custom {
-    padding: 0.6rem 1.5rem;
-    border-radius: 50px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-size: 0.9rem;
-}
-
-.btn-sell {
-    background: var(--danger-color);
-    color: var(--white);
-    border: none;
-}
-
-.btn-sell:hover {
-    background: #c0392b;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-}
-
-.btn-profile {
-    background: transparent;
-    border: 2px solid var(--primary-color);
-    color: var(--primary-color);
-}
-
-.btn-profile:hover {
-    background: var(--primary-color);
-    color: var(--white);
-    transform: translateY(-2px);
-}
-
-.btn-logout {
-    background: transparent;
-    border: 2px solid var(--danger-color);
-    color: var(--danger-color);
-}
-
-.btn-logout:hover {
-    background: var(--danger-color);
-    color: var(--white);
-    transform: translateY(-2px);
-}
-
-/* Product Card Styles */
-.product-section {
-    padding: 2rem 0;
-}
-
-.section-title {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 2rem;
-    position: relative;
-    padding-bottom: 0.5rem;
-}
-
-.section-title::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 60px;
-    height: 3px;
-    background: var(--primary-color);
-}
-
-.product-card {
-    background: var(--white);
-    border-radius: 15px;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-}
-
-.product-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-.product-image {
-    position: relative;
-    overflow: hidden;
-    padding-top: 75%;
-}
-
-.product-image img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-}
-
-.product-card:hover .product-image img {
-    transform: scale(1.1);
-}
-
-.product-details {
-    padding: 1.5rem;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.product-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--text-color);
-}
-
-.product-price {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--primary-color);
-    margin-bottom: 1rem;
-}
-
-.product-description {
-    font-size: 0.9rem;
-    color: #666;
-    margin-bottom: 1rem;
-    flex-grow: 1;
-}
-
-.btn-detail {
-    background: transparent;
-    border: 2px solid var(--primary-color);
-    color: var(--primary-color);
-    border-radius: 50px;
-    padding: 0.5rem 1.5rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
-}
-
-.btn-detail:hover {
-    background: var(--primary-color);
-    color: var(--white);
-    transform: translateY(-2px);
-}
-
-/* Category Pills */
-.category-pills {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    padding: 1rem 0;
-    margin-bottom: 2rem;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-.category-pills::-webkit-scrollbar {
-    display: none;
-}
-
-.category-pill {
-    background: var(--white);
-    padding: 0.5rem 1.5rem;
-    border-radius: 50px;
-    font-weight: 500;
-    color: var(--text-color);
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.category-pill:hover {
-    background: var(--primary-color);
-    color: var(--white);
-    transform: translateY(-2px);
-}
-
-/* Animations */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.product-card {
-    animation: fadeIn 0.6s ease-out forwards;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .navbar-nav {
-        padding: 1rem 0;
+    :root {
+        /* Colors */
+        --primary: #2980b9;
+        --secondary: #3498db;
+        --accent: #e74c3c;
+        --success: #2ecc71;
+        --warning: #f1c40f;
+        --dark: #2c3e50;
+        --light: #ecf0f1;
+        --white: #ffffff;
+        
+        /* Shadows */
+        --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+        --shadow-md: 0 4px 8px rgba(0,0,0,0.1);
+        --shadow-lg: 0 8px 16px rgba(0,0,0,0.15);
+        
+        /* Border Radius */
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 20px;
+        --radius-full: 9999px;
     }
 
-    .btn-custom {
-        margin: 0.5rem 0;
-        width: 100%;
+    /* Base Styles */
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, var(--light) 0%, #d5e5ee 100%);
+        color: var(--dark);
+        min-height: 100vh;
     }
 
-    .section-title {
-        font-size: 1.5rem;
+    /* Layout */
+    .container {
+        max-width: 1200px;
+        padding: 0 1rem;
     }
 
-    /* Mobile Navbar */
+    /* Navbar */
     .navbar {
-        padding: 0.5rem 0;
+        background: var(--white);
+        padding: 1rem 0;
+        box-shadow: var(--shadow-md);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
     }
 
     .navbar-brand {
         font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary);
     }
 
-    .navbar .container {
-        padding: 0 15px;
-    }
-
-    #navbarNav {
-        background: var(--white);
-        padding: 1rem;
-        border-radius: 10px;
-        margin-top: 1rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .navbar-nav {
-        gap: 0.5rem;
-    }
-
-    /* Mobile Button */
-    .btn-custom {
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
-        width: 100%;
-        margin: 0.25rem 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* Mobile Product Cards */
-    .col-md-3 {
-        padding: 0 10px;
-    }
-
+    /* Product Card */
     .product-card {
-        margin-bottom: 1rem;
+        background: var(--white);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: var(--shadow-sm);
+        height: 100%;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .product-image-container {
+        position: relative;
+        padding-top: 100%;
+        overflow: hidden;
     }
 
     .product-image {
-        padding-top: 100%; /* Make images square on mobile */
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
     }
 
-    .product-details {
+    .product-card:hover .product-image {
+        transform: scale(1.1);
+    }
+
+    .product-info {
         padding: 1rem;
     }
 
     .product-title {
         font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--dark);
+    }
+
+    .product-category {
+        font-size: 0.85rem;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+        display: inline-block;
     }
 
     .product-price {
-        font-size: 1.1rem;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--accent);
+        margin-bottom: 0.5rem;
     }
 
     .product-description {
-        font-size: 0.85rem;
-        -webkit-line-clamp: 2;
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 1rem;
         display: -webkit-box;
+        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
 
-    /* Mobile Category Pills */
-    .category-pills {
-        padding: 0.5rem 15px;
-        margin: 0 -15px;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .category-pill {
-        padding: 0.4rem 1rem;
-        font-size: 0.85rem;
-        scroll-snap-align: start;
-        flex-shrink: 0;
-    }
-
-    /* Mobile Section Title */
-    .section-title {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-        padding: 0 15px;
-    }
-
-    /* Mobile Container Spacing */
-    .container {
-        padding: 0 10px;
-    }
-
-    .product-section {
-        padding: 1rem 0;
-    }
-
-    /* Mobile Grid Layout */
-    .row {
-        margin: 0 -10px;
-    }
-
-    .col-6 {
-        padding: 0 10px;
-        margin-bottom: 20px;
-    }
-}
-
-/* Very Small Devices */
-@media (max-width: 576px) {
-    .col-md-3 {
-        width: 50%; /* 2 cards per row on very small devices */
-    }
-
-    .product-title {
-        font-size: 0.9rem;
-    }
-
-    .btn-detail {
-        padding: 0.4rem 1rem;
-        font-size: 0.8rem;
-    }
-}
-
-/* Mobile Bottom Navigation */
-.mobile-bottom-nav {
-    display: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--white);
-    padding: 0.5rem;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-}
-
-@media (max-width: 768px) {
-    .mobile-bottom-nav {
+    /* Badges */
+    .badges-container {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
         display: flex;
-        justify-content: space-around;
+        justify-content: space-between;
     }
 
-    .mobile-nav-item {
+    .badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: var(--radius-full);
+        font-size: 0.75rem;
+        font-weight: 600;
         display: flex;
-        flex-direction: column;
         align-items: center;
-        color: var(--text-color);
-        text-decoration: none;
-        font-size: 0.8rem;
+        gap: 0.25rem;
     }
 
-    .mobile-nav-item i {
-        font-size: 1.2rem;
-        margin-bottom: 0.2rem;
+    .condition-badge {
+        background: var(--success);
+        color: var(--white);
     }
 
-    body {
-        padding-bottom: 60px; /* Space for bottom nav */
+    .condition-badge.bekas {
+        background: var(--secondary);
     }
-}
 
-    /* Rating Styles */
-.rating-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    color: #ffd700;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.product-rating {
-    color: #ffd700;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.rating-count {
-    color: #666;
-    font-size: 0.8rem;
-}
-
-.product-rating i {
-    margin-right: 2px;
-}
-
-/* Hover Rating Effect */
-.product-card:hover .product-rating i {
-    transform: scale(1.1);
-    transition: transform 0.2s ease;
-}
-
-/* Rating Filter Pills */
-.rating-filter {
-    display: flex;
-    gap: 0.5rem;
-    margin: 1rem 0;
-    flex-wrap: wrap;
-}
-
-.rating-pill {
-    background: var(--white);
-    padding: 0.3rem 1rem;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(0,0,0,0.1);
-}
-
-.rating-pill:hover {
-    background: var(--primary-color);
-    color: var(--white);
-}
-
-.rating-pill i {
-    color: #ffd700;
-}
-
-.rating-pill.active {
-    background: var(--primary-color);
-    color: var(--white);
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
     .rating-badge {
-        font-size: 0.8rem;
-        padding: 3px 8px;
+        background: rgba(0,0,0,0.7);
+        color: var(--warning);
     }
 
+    /* Filters */
+    .filters-section {
+        background: rgba(255,255,255,0.8);
+        backdrop-filter: blur(10px);
+        padding: 1rem 0;
+        position: sticky;
+        top: 72px;
+        z-index: 90;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .filter-pills {
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        padding: 0.5rem 0;
+        scrollbar-width: none;
+    }
+
+    .filter-pills::-webkit-scrollbar {
+        display: none;
+    }
+
+    .filter-pill {
+        padding: 0.5rem 1rem;
+        background: var(--white);
+        border-radius: var(--radius-full);
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--dark);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        border: 1px solid rgba(0,0,0,0.1);
+        user-select: none;
+    }
+
+    .filter-pill:hover,
+    .filter-pill.active {
+        background: var(--primary);
+        color: var(--white);
+    }
+
+    /* Buttons */
+    .btn-custom {
+        padding: 0.5rem 1.25rem;
+        border-radius: var(--radius-full);
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: var(--white);
+        border: none;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 2px solid var(--primary);
+        color: var(--primary);
+    }
+
+    .btn-outline:hover {
+        background: var(--primary);
+        color: var(--white);
+    }
+
+    /* Mobile Navigation */
+    .mobile-nav {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--white);
+        padding: 0.75rem;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+
+    /* Search Styles */
+    .search-container {
+        max-width: 500px;
+        width: 100%;
+    }
+
+    .search-input {
+        padding: 0.5rem 2.5rem 0.5rem 1rem;
+        border-radius: var(--radius-full);
+        border: 1px solid rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--primary);
+        border-color: var(--primary);
+    }
+
+    /* No Results Message */
+    .no-results {
+        text-align: center;
+        padding: 2rem;
+        color: var(--dark);
+        background: var(--white);
+        border-radius: var(--radius-md);
+        margin: 2rem auto;
+        box-shadow: var(--shadow-sm);
+        max-width: 400px;
+    }
+
+    /* Rating Modal Styles */
+    .stars {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 0.25rem;
+    }
+
+    .stars input {
+        display: none;
+    }
+
+    .stars label {
+        font-size: 30px;
+        color: #ddd;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+    .stars label:hover,
+    .stars label:hover ~ label,
+    .stars input:checked ~ label {
+        color: #ffd700;
+    }
+
+    /* Rating Badge on Product Card */
     .product-rating {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #ffd700;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
         font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
     }
 
-    .rating-count {
-        font-size: 0.7rem;
+    @media (max-width: 768px) {
+        .mobile-nav {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        body {
+            padding-bottom: 70px;
+        }
+
+        .product-title {
+            font-size: 0.9rem;
+        }
+
+        .product-price {
+            font-size: 1.1rem;
+        }
+
+        .filters-section {
+            top: 56px;
+        }
     }
-}
     </style>
 </head>
-<body onload="noBack();" onpageshow="if (event.persisted) noBack();" onunload="">
-
-<!-- Dalam body, tambahkan bottom navigation untuk mobile -->
-<div class="mobile-bottom-nav">
-    <a href="index.php" class="mobile-nav-item">
-        <i class="fas fa-home"></i>
-        <span>Home</span>
-    </a>
-    <a href="post_barang.php" class="mobile-nav-item">
-        <i class="fas fa-plus-circle"></i>
-        <span>Jual</span>
-    </a>
-    <a href="transactions.php" class="mobile-nav-item">
-        <i class="fas fa-shopping-bag"></i>
-        <span>Orders</span>
-    </a>
-    <a href="profile.php" class="mobile-nav-item">
-        <i class="fas fa-user"></i>
-        <span>Profil</span>
-    </a>
-</div>
-
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg">
-    <div class="container">
-        <a class="navbar-brand" href="#">
-            <i class="fas fa-store me-2"></i>
-            Duo Mart
+<body>
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav">
+        <a href="index.php" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <div class="ms-auto d-flex align-items-center gap-3">
-                <a href="post_barang.php" class="btn btn-custom btn-sell">
-                    <i class="fas fa-plus-circle me-2"></i>Jual
-                </a>
-                <a href="profile.php" class="btn btn-custom btn-profile">
-                    <i class="fas fa-user me-2"></i>Profil
-                </a>
-                <a href="transactions.php" class="btn btn-custom btn-profile">
-                    <i class="fas fa-shopping-bag me-2"></i>Orders
-                </a>
-                <a href="../actions/logout.php?logout=true" class="btn btn-custom btn-logout">
-                    <i class="fas fa-sign-out-alt me-2"></i>Logout
-                </a>
-            </div>
-        </div>
+        <a href="post_barang.php" class="nav-item">
+            <i class="fas fa-plus-circle"></i>
+            <span>Jual</span>
+        </a>
+        <a href="transactions.php" class="nav-item">
+            <i class="fas fa-shopping-bag"></i>
+            <span>Orders</span>
+        </a>
+        <a href="profile.php" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profil</span>
+        </a>
     </div>
-</nav>
 
-<!-- Categories -->
-<div class="container mt-4">
-    <div class="category-pills">
-        <div class="category-pill active">Semua</div>
-        <div class="category-pill">Elektronik</div>
-        <div class="category-pill">Fashion</div>
-        <div class="category-pill">Perawatan Pribadi</div>
-        <div class="category-pill">Anak-anak</div>
-        <div class="category-pill">Keseharian</div>
-    </div>
-</div>
-
-<!-- Products -->
-<div class="container product-section">
-    <h2 class="section-title">Produk Terbaru</h2>
-    <div class="row">
-        <?php while ($row = $result->fetch_assoc()): ?>
-            <div class="col-6 col-md-3">
-    <div class="product-card">
-        <div class="product-image">
-            <img src="../<?php echo $row['gambar']; ?>" alt="<?php echo htmlspecialchars($row['nama_produk']); ?>">
-            <?php if($row['rating'] > 0): ?>
-                <div class="rating-badge">
-                    <i class="fas fa-star"></i>
-                    <?php echo number_format($row['rating'], 1); ?>
-                </div>
-            <?php endif; ?>
-        </div>
-        <div class="product-details">
-            <h3 class="product-title"><?php echo htmlspecialchars($row['nama_produk']); ?></h3>
-            <div class="product-price">
-                <i class="fas fa-tag me-2"></i>
-                Rp <?php echo number_format($row['harga'], 0, ',', '.'); ?>
-            </div>
-            <div class="product-rating mb-2">
-                <?php
-                $rating = $row['rating'];
-                for($i = 1; $i <= 5; $i++) {
-                    if($i <= $rating) {
-                        echo '<i class="fas fa-star"></i>';
-                    } elseif($i - $rating < 1) {
-                        echo '<i class="fas fa-star-half-alt"></i>';
-                    } else {
-                        echo '<i class="far fa-star"></i>';
-                    }
-                }
-                ?>
-                <span class="rating-count">(<?php echo $row['total_ratings']; ?>)</span>
-            </div>
-            <p class="product-description">
-                <?php echo htmlspecialchars(substr($row['deskripsi'], 0, 100)) . '...'; ?>
-            </p>
-            <a href="detail_produk.php?id=<?php echo $row['id']; ?>" class="btn-detail">
-                <i class="fas fa-eye me-2"></i>Lihat Detail
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="../index.php">
+                <i class="fas fa-store me-2"></i>
+                Duo Mart
             </a>
+            <div class="search-container mx-auto d-none d-lg-block">
+                <div class="position-relative">
+                    <input type="text" class="search-input form-control" placeholder="Cari produk..." style="min-width: 300px;">
+                    <i class="fas fa-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+                </div>
+            </div>
+            <div class="w-100 mt-2 d-lg-none">
+                <div class="position-relative">
+                    <input type="text" class="search-input form-control" placeholder="Cari produk...">
+                    <i class="fas fa-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+                </div>
+            </div>
+            <div class="ms-auto d-none d-lg-flex gap-3">
+                <a href="post_barang.php" class="btn-custom btn-primary">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Jual</span>
+                </a>
+                <a href="profile.php" class="btn-custom btn-outline">
+                    <i class="fas fa-user"></i>
+                    <span>Profil</span>
+                </a>
+                <a href="transactions.php" class="btn-custom btn-outline">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="../actions/logout.php?logout=true" class="btn-custom btn-outline">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <div class="container">
+            <!-- Category Filters -->
+            <div class="filter-pills">
+                <div class="filter-pill active" data-filter="all">Semua</div>
+                <div class="filter-pill" data-filter="Elektronik">Elektronik</div>
+                <div class="filter-pill" data-filter="Fashion">Fashion</div>
+                <div class="filter-pill" data-filter="Kesehatan">Kesehatan</div>
+                <div class="filter-pill" data-filter="Makanan">Makanan</div>
+                <div class="filter-pill" data-filter="Lainnya">Lainnya</div>
+            </div>
+            <!-- Condition Filters -->
+            <div class="filter-pills mt-2">
+                <div class="filter-pill active" data-condition="all">Semua Kondisi</div>
+                <div class="filter-pill" data-condition="Baru">
+                    <i class="fas fa-box-open"></i>
+                    <span>Baru</span>
+                </div>
+                <div class="filter-pill" data-condition="Bekas">
+                    <i class="fas fa-box"></i>
+                    <span>Bekas</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products -->
+    <div class="container py-4">
+        <h2 class="h4 mb-4">Produk Terbaru</h2>
+        <div class="row g-4">
+            <?php while ($row = $result->fetch_assoc()): ?>
+            <div class="col-6 col-md-3">
+                <div class="product-card" 
+                     data-category="<?php echo htmlspecialchars($row['kategori']); ?>" 
+                     data-condition="<?php echo htmlspecialchars($row['kondisi']); ?>">
+                    <div class="product-image-container">
+                        <img src="../<?php echo $row['gambar']; ?>" 
+                             alt="<?php echo htmlspecialchars($row['nama_produk']); ?>" 
+                             class="product-image">
+                        <div class="badges-container">
+                            <div class="badge condition-badge <?php echo strtolower($row['kondisi']); ?>">
+                                <i class="fas <?php echo $row['kondisi'] === 'Baru' ? 'fa-box-open' : 'fa-box'; ?>"></i>
+                                <span><?php echo $row['kondisi']; ?></span>
+                            </div>
+                            <?php if($row['rating'] > 0): ?>
+                            <div class="badge rating-badge">
+                                <i class="fas fa-star"></i>
+                                <span><?php echo number_format($row['rating'], 1); ?></span>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-title"><?php echo htmlspecialchars($row['nama_produk']); ?></h3>
+                        <span class="product-category">
+                            <i class="fas fa-tag me-1"></i>
+                            <?php echo $row['kategori']; ?>
+                        </span>
+                        <div class="product-price">
+                            Rp <?php echo number_format($row['harga'], 0, ',', '.'); ?>
+                        </div>
+                        <p class="product-description">
+                            <?php echo htmlspecialchars(substr($row['deskripsi'], 0, 100)) . '...'; ?>
+                        </p>
+
+                        <button class="btn-custom btn-outline w-100 mb-2" 
+                                onclick="openRatingModal(<?php echo $row['id']; ?>)">
+                            <i class="fas fa-star"></i>
+                            <span>Beri Rating</span>
+                        </button>
+
+                        <a href="detail_produk.php?id=<?php echo $row['id']; ?>" 
+                           class="btn-custom btn-outline w-100">
+                            <i class="fas fa-eye"></i>
+                            <span>Lihat Detail</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <?php endwhile; ?>
+        </div>
+    </div>
+
+    <!-- Rating Modal -->
+<div class="modal fade" id="ratingModal" tabindex="-1" aria-labelledby="ratingModalLabel" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ratingModalLabel">Beri Rating</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="ratingForm" method="post">
+                    <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
+                    <input type="hidden" name="user_login" value="<?php echo htmlspecialchars($user_login); ?>">
+                    <input type="hidden" name="product_id" id="product_id">
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <div class="stars">
+                            <input type="radio" name="rating" value="5" id="rate5">
+                            <label for="rate5">&#9733;</label>
+                            <input type="radio" name="rating" value="4" id="rate4">
+                            <label for="rate4">&#9733;</label>
+                            <input type="radio" name="rating" value="3" id="rate3">
+                            <label for="rate3">&#9733;</label>
+                            <input type="radio" name="rating" value="2" id="rate2">
+                            <label for="rate2">&#9733;</label>
+                            <input type="radio" name="rating" value="1" id="rate1">
+                            <label for="rate1">&#9733;</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="review" class="form-label">Review (Opsional)</label>
+                        <textarea class="form-control" name="review" id="review" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Submit Rating</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
-        <?php endwhile; ?>
-    </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-window.onpageshow = function(event) {
-    if (event.persisted) {
-        window.location.reload();
-    }
-};
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Filter functionality
+            const categoryPills = document.querySelectorAll('[data-filter]');
+            const conditionPills = document.querySelectorAll('[data-condition]');
+            const productCards = document.querySelectorAll('.product-card');
+            const searchInputs = document.querySelectorAll('.search-input');
+            
+            let activeCategory = 'all';
+            let activeCondition = 'all';
+            let searchTerm = '';
 
-window.history.forward();
-function noBack() {
-    window.history.forward();
-}
+            // Function to filter products
+            function filterProducts() {
+                let hasVisibleProducts = false;
 
-    // Add this at the bottom of your existing script section
-document.addEventListener('DOMContentLoaded', function() {
-    // Rating filter functionality
-    const ratingPills = document.querySelectorAll('.rating-pill');
-    const productCards = document.querySelectorAll('.product-card');
+                productCards.forEach(card => {
+                    const cardCategory = card.getAttribute('data-category');
+                    const cardCondition = card.getAttribute('data-condition');
+                    const title = card.querySelector('.product-title').textContent.toLowerCase();
+                    const description = card.querySelector('.product-description').textContent.toLowerCase();
+                    const category = cardCategory.toLowerCase();
+                    const price = card.querySelector('.product-price').textContent.toLowerCase();
+                    
+                    const categoryMatch = activeCategory === 'all' || cardCategory === activeCategory;
+                    const conditionMatch = activeCondition === 'all' || cardCondition === activeCondition;
+                    const searchMatch = searchTerm === '' || 
+                        title.includes(searchTerm) || 
+                        description.includes(searchTerm) || 
+                        category.includes(searchTerm) ||
+                        price.includes(searchTerm);
+                    
+                    const cardParent = card.closest('.col-6');
+                    if (categoryMatch && conditionMatch && searchMatch) {
+                        cardParent.style.display = 'block';
+                        hasVisibleProducts = true;
+                    } else {
+                        cardParent.style.display = 'none';
+                    }
+                });
 
-    ratingPills.forEach(pill => {
-        pill.addEventListener('click', function() {
-            // Remove active class from all pills
-            ratingPills.forEach(p => p.classList.remove('active'));
-            // Add active class to clicked pill
-            this.classList.add('active');
-
-            const selectedRating = this.dataset.rating;
-
-            productCards.forEach(card => {
-                if (selectedRating === 'all') {
-                    card.parentElement.style.display = 'block';
-                    return;
+                // Show/hide no results message
+                const existingMessage = document.querySelector('.no-results');
+                if (!hasVisibleProducts) {
+                    if (!existingMessage) {
+                        const noResultsMessage = document.createElement('div');
+                        noResultsMessage.className = 'no-results';
+                        noResultsMessage.innerHTML = `
+                            <i class="fas fa-filter fa-2x mb-3 text-muted"></i>
+                            <h3 class="h5">Tidak ada produk</h3>
+                            <p class="text-muted">Tidak ada produk yang sesuai dengan filter yang dipilih</p>
+                        `;
+                        document.querySelector('.row.g-4').appendChild(noResultsMessage);
+                    }
+                } else if (existingMessage) {
+                    existingMessage.remove();
                 }
+            }
 
-                const productRating = parseFloat(card.querySelector('.rating-badge')?.textContent || '0');
-                if (productRating >= parseFloat(selectedRating)) {
-                    card.parentElement.style.display = 'block';
-                } else {
-                    card.parentElement.style.display = 'none';
+            // Rating form handling
+const ratingForm = document.getElementById('ratingForm');
+if (ratingForm) {
+    ratingForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Validate rating
+        const rating = document.querySelector('input[name="rating"]:checked');
+        if (!rating) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Rating Diperlukan',
+                text: 'Silakan pilih rating terlebih dahulu'
+            });
+            return;
+        }
+
+        try {
+            const submitButton = this.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+            const formData = new FormData(this);
+
+            const response = await fetch('../actions/submit_rating.php', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             });
-        });
+
+            // Check if response is ok
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Try to parse JSON response
+            let result;
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                result = await response.json();
+            } else {
+                const text = await response.text();
+                console.error('Non-JSON response:', text);
+                throw new Error('Server tidak mengembalikan response JSON yang valid');
+            }
+
+            if (result.success) {
+                // Hide modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('ratingModal'));
+                modal.hide();
+                
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: result.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                
+                // Reload page
+                window.location.reload();
+            } else {
+                throw new Error(result.message || 'Gagal menyimpan rating');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error.message || 'Terjadi kesalahan saat menyimpan rating'
+            });
+        } finally {
+            const submitButton = this.querySelector('button[type="submit"]');
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Submit Rating';
+        }
     });
-});
-</script>
+}
+
+            // Category filter event listeners
+            categoryPills.forEach(pill => {
+                pill.addEventListener('click', function() {
+                    categoryPills.forEach(p => p.classList.remove('active'));
+                    this.classList.add('active');
+                    activeCategory = this.getAttribute('data-filter');
+                    filterProducts();
+                });
+            });
+
+            // Condition filter event listeners
+            conditionPills.forEach(pill => {
+                pill.addEventListener('click', function() {
+                    conditionPills.forEach(p => p.classList.remove('active'));
+                    this.classList.add('active');
+                    activeCondition = this.getAttribute('data-condition');
+                    filterProducts();
+                });
+            });
+
+            // Search functionality with debounce
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func.apply(this, args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            // Search input event listeners
+            searchInputs.forEach(input => {
+                input.addEventListener('input', debounce(function() {
+                    searchTerm = this.value.toLowerCase().trim();
+                    filterProducts();
+                }, 300));
+            });
+
+            // Star rating visual feedback
+            const ratingStars = document.querySelectorAll('.stars label');
+            ratingStars.forEach(star => {
+                star.addEventListener('mouseover', function() {
+                    const siblings = [...this.parentElement.children];
+                    const starValue = this.getAttribute('for').replace('rate', '');
+                    siblings.forEach(sibling => {
+                        if (sibling.tagName === 'LABEL') {
+                            sibling.style.color = sibling.getAttribute('for').replace('rate', '') <= starValue 
+                                ? '#ffd700' 
+                                : '#ddd';
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseout', function() {
+                    const checkedInput = document.querySelector('input[name="rating"]:checked');
+                    const siblings = [...this.parentElement.children];
+                    siblings.forEach(sibling => {
+                        if (sibling.tagName === 'LABEL') {
+                            sibling.style.color = checkedInput && sibling.getAttribute('for').replace('rate', '') <= checkedInput.value 
+                                ? '#ffd700' 
+                                : '#ddd';
+                        }
+                    });
+                });
+            });
+
+            // Clear search when filters are clicked
+            categoryPills.forEach(pill => {
+                pill.addEventListener('click', function() {
+                    searchInputs.forEach(input => {
+                        input.value = '';
+                    });
+                    searchTerm = '';
+                });
+            });
+
+            conditionPills.forEach(pill => {
+                pill.addEventListener('click', function() {
+                    searchInputs.forEach(input => {
+                        input.value = '';
+                    });
+                    searchTerm = '';
+                });
+            });
+
+            // Mobile navigation active state
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.mobile-nav .nav-item').forEach(item => {
+                if (item.getAttribute('href') === currentPath) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Initialize filters
+            filterProducts();
+
+            // Prevent going back
+            window.history.forward();
+            function noBack() {
+                window.history.forward();
+            }
+        });
+
+        function openRatingModal(productId) {
+            // Reset form
+            document.getElementById('ratingForm').reset();
+            
+            // Set product ID
+            document.getElementById('product_id').value = productId;
+            
+            // Reset stars
+            document.querySelectorAll('.stars label').forEach(star => {
+                star.style.color = '#ddd';
+            });
+            
+            // Show modal
+            const ratingModal = new bootstrap.Modal(document.getElementById('ratingModal'));
+            ratingModal.show();
+        }
+    </script>
 </body>
 </html>

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<link rel="icon" type="image/x-icon" href="../favicon/favicon.ico">
-<link rel="shortcut icon" href="../favicon/favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/x-icon" href="../favicon/favicon.ico">
+    <link rel="shortcut icon" href="../favicon/favicon.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DuoMart - Login</title>
@@ -15,7 +15,7 @@
             --secondary: #7c3aed;
             --dark: #1e293b;
             --light: #f8fafc;
-            --gray: #64748b;
+            --gray:rgb(2, 5, 8);
         }
 
         body {
@@ -196,8 +196,8 @@
             color: var(--primary);
         }
 
-         /* Base styles */
-         html {
+        /* Base styles */
+        html {
             height: -webkit-fill-available;
             overflow: hidden;
         }
@@ -355,7 +355,150 @@
         .btn-login:active {
             transform: scale(0.98);
         }
+
+        .google-login-btn {
+            width: 100%;
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            padding: 0.8rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .google-login-btn:hover {
+            background: #f8fafc;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .google-login-btn img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: var(--gray);
+            opacity: 0.2;
+        }
+
+        .divider::before {
+            left: 0;
+        }
+
+        .divider::after {
+            right: 0;
+        }
+
+        .divider span {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0 1rem;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
     </style>
+    <!-- Add Google Sign-In API -->
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script>
+        // Initialize Google Sign-In
+        function initGoogle() {
+            gapi.load('auth2', function() {
+                gapi.auth2.init({
+                    client_id: '636392080842-74c7qbrcelo13o2v9sqsksatsmr7av9q.apps.googleusercontent.com'
+                });
+            });
+        }
+
+        // Handle Google Sign-In
+        async function handleGoogleSignIn() {
+            const button = document.getElementById('googleSignInBtn');
+            const buttonText = document.getElementById('googleBtnText');
+            const spinner = document.getElementById('loadingSpinner');
+
+            try {
+                // Show loading state
+                button.disabled = true;
+                buttonText.textContent = 'Signing in...';
+                spinner.style.display = 'block';
+
+                const auth2 = await gapi.auth2.getAuthInstance();
+                const googleUser = await auth2.signIn();
+                const idToken = googleUser.getAuthResponse().id_token;
+
+                // Send token to server
+                const response = await fetch('../actions/google_auth.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id_token: idToken })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    window.location.href = 'dashboard.php';
+                } else {
+                    throw new Error(data.message || 'Authentication failed');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Sign in failed: ' + (error.message || 'Please try again'));
+                
+                // Reset button state
+                button.disabled = false;
+                buttonText.textContent = 'Sign in with Google';
+                spinner.style.display = 'none';
+            }
+        }
+
+        // Initialize Google Sign-In on page load
+        window.onload = initGoogle;
+
+        // Password visibility toggle
+        function togglePassword(icon) {
+            const input = icon.previousElementSibling.previousElementSibling;
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        // Form validation
+        (function () {
+            'use strict'
+            const forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
 </head>
 <body>
     <!-- Floating background shapes -->
@@ -369,6 +512,21 @@
             <p>Welcome back! Please login to your account</p>
         </div>
 
+        <!-- Google Sign-In Button -->
+        <button type="button" class="google-login-btn" id="googleSignInBtn" onclick="handleGoogleSignIn()">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google logo">
+            <span id="googleBtnText">Sign in with Google</span>
+        </button>
+
+        <div id="loadingSpinner" style="display: none; text-align: center; margin: 10px 0;">
+            <i class="fas fa-spinner fa-spin"></i> Signing in...
+        </div>
+
+        <div class="divider">
+            <span>OR</span>
+        </div>
+
+        <!-- Regular Login Form -->
         <form action="../actions/auth.php" method="POST" class="needs-validation" novalidate>
             <div class="form-group">
                 <input type="text" class="form-control" name="username" placeholder="Username" required>
@@ -398,71 +556,5 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Password visibility toggle
-        function togglePassword(icon) {
-            const input = icon.previousElementSibling.previousElementSibling;
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.replace('fa-eye', 'fa-eye-slash');
-            } else {
-                input.type = 'password';
-                icon.classList.replace('fa-eye-slash', 'fa-eye');
-            }
-        }
-
-        // Form validation
-        (function () {
-            'use strict'
-            const forms = document.querySelectorAll('.needs-validation')
-            Array.prototype.slice.call(forms).forEach(function (form) {
-                form.addEventListener('submit', function (event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault()
-                        event.stopPropagation()
-                    }
-                    form.classList.add('was-validated')
-                }, false)
-            })
-        })()
-
-           // Prevent zoom on double tap
-           document.addEventListener('touchstart', function(event) {
-            if (event.touches.length > 1) {
-                event.preventDefault();
-            }
-        }, { passive: false });
-
-        // Prevent zoom on input focus
-        const metas = document.getElementsByTagName('meta');
-        for (let i = 0; i < metas.length; i++) {
-            if (metas[i].name === 'viewport') {
-                metas[i].content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0';
-            }
-        }
-
-        // Handle virtual keyboard
-        const loginContainer = document.querySelector('.login-container');
-        const originalHeight = window.innerHeight;
-
-        window.addEventListener('resize', () => {
-            if (window.innerHeight < originalHeight) {
-                // Keyboard is shown
-                loginContainer.style.transform = 'translateY(-10%)';
-            } else {
-                // Keyboard is hidden
-                loginContainer.style.transform = 'translateY(0)';
-            }
-        });
-
-        // Fix iOS height issue
-        function adjustHeight() {
-            const vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        }
-
-        window.addEventListener('resize', adjustHeight);
-        adjustHeight();
-    </script>
 </body>
 </html>
