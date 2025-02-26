@@ -357,18 +357,27 @@ function selectPayment(type) {
 }
 
 // Validasi form sebelum submit
-document.getElementById('checkoutForm').onsubmit = function(e) {
+document.getElementById('checkoutForm').onsubmit = function (e) {
     const nama = document.querySelector('input[name="nama_penerima"]').value;
     const alamat = document.querySelector('textarea[name="alamat"]').value;
     const pembayaran = document.querySelector('input[name="metode_pembayaran"]:checked');
-    
+
     if (!nama || !alamat || !pembayaran) {
         e.preventDefault();
         alert('Mohon lengkapi semua informasi yang diperlukan');
         return false;
     }
+
+    // Jika metode pembayaran adalah E-Wallet, arahkan ke halaman qris.php
+    if (pembayaran.value === "E-Wallet") {
+        e.preventDefault();
+        window.location.href = "../pages/qris.php";
+        return false;
+    }
+
     return true;
 };
+
 </script>
 </body>
 </html>

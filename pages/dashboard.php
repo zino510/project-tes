@@ -8,6 +8,17 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Di bagian awal dashboard.php setelah session_start()
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('Invalid CSRF token');
+    }
+}
+
 $user_id = $_SESSION['user_id'];
 $user_login = $_SESSION['user_login'] ?? '';
 
@@ -475,62 +486,78 @@ $result = $conn->query("SELECT * FROM product ORDER BY created_at DESC LIMIT 12"
         </div>
     </div>
 
-    <!-- Products -->
-    <div class="container py-4">
-        <h2 class="h4 mb-4">Produk Terbaru</h2>
-        <div class="row g-4">
-            <?php while ($row = $result->fetch_assoc()): ?>
-            <div class="col-6 col-md-3">
-                <div class="product-card" 
-                     data-category="<?php echo htmlspecialchars($row['kategori']); ?>" 
-                     data-condition="<?php echo htmlspecialchars($row['kondisi']); ?>">
-                    <div class="product-image-container">
-                        <img src="../<?php echo $row['gambar']; ?>" 
-                             alt="<?php echo htmlspecialchars($row['nama_produk']); ?>" 
-                             class="product-image">
-                        <div class="badges-container">
-                            <div class="badge condition-badge <?php echo strtolower($row['kondisi']); ?>">
-                                <i class="fas <?php echo $row['kondisi'] === 'Baru' ? 'fa-box-open' : 'fa-box'; ?>"></i>
-                                <span><?php echo $row['kondisi']; ?></span>
-                            </div>
-                            <?php if($row['rating'] > 0): ?>
-                            <div class="badge rating-badge">
-                                <i class="fas fa-star"></i>
-                                <span><?php echo number_format($row['rating'], 1); ?></span>
-                            </div>
-                            <?php endif; ?>
+   <!-- Products -->
+<div class="container py-4">
+    <h2 class="h4 mb-4">Produk Terbaru</h2>
+    <div class="row g-4">
+        <?php while ($row = $result->fetch_assoc()): ?>
+       <div class="col-6 col-md-3">
+    <div class="product-card" 
+         data-category="<?php echo htmlspecialchars($row['kategori']); ?>" 
+         data-condition="<?php echo htmlspecialchars($row['kondisi']); ?>"
+         data-product-id="<?php echo $row['id']; ?>">
+                <div class="product-image-container">
+                    <img src="../<?php echo $row['gambar']; ?>" 
+                         alt="<?php echo htmlspecialchars($row['nama_produk']); ?>" 
+                         class="product-image">
+                    <div class="badges-container">
+                        <div class="badge condition-badge <?php echo strtolower($row['kondisi']); ?>">
+                            <i class="fas <?php echo $row['kondisi'] === 'Baru' ? 'fa-box-open' : 'fa-box'; ?>"></i>
+                            <span><?php echo $row['kondisi']; ?></span>
                         </div>
-                    </div>
-                    <div class="product-info">
-                        <h3 class="product-title"><?php echo htmlspecialchars($row['nama_produk']); ?></h3>
-                        <span class="product-category">
-                            <i class="fas fa-tag me-1"></i>
-                            <?php echo $row['kategori']; ?>
-                        </span>
-                        <div class="product-price">
-                            Rp <?php echo number_format($row['harga'], 0, ',', '.'); ?>
-                        </div>
-                        <p class="product-description">
-                            <?php echo htmlspecialchars(substr($row['deskripsi'], 0, 100)) . '...'; ?>
-                        </p>
-
-                        <button class="btn-custom btn-outline w-100 mb-2" 
-                                onclick="openRatingModal(<?php echo $row['id']; ?>)">
+                        <?php if($row['rating'] > 0): ?>
+                        <div class="badge rating-badge">
                             <i class="fas fa-star"></i>
-                            <span>Beri Rating</span>
-                        </button>
-
-                        <a href="detail_produk.php?id=<?php echo $row['id']; ?>" 
-                           class="btn-custom btn-outline w-100">
-                            <i class="fas fa-eye"></i>
-                            <span>Lihat Detail</span>
-                        </a>
+                            <span><?php echo number_format($row['rating'], 1); ?></span>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
+                <div class="product-info">
+                    <h3 class="product-title"><?php echo htmlspecialchars($row['nama_produk']); ?></h3>
+                    <span class="product-category">
+                        <i class="fas fa-tag me-1"></i>
+                        <?php echo $row['kategori']; ?>
+                    </span>
+                    <div class="product-price">
+                        Rp <?php echo number_format($row['harga'], 0, ',', '.'); ?>
+                    </div>
+                    <p class="product-description">
+                        <?php echo htmlspecialchars(substr($row['deskripsi'], 0, 100)) . '...'; ?>
+                    </p>
+
+                    <?php if ($row['user_id'] == $_SESSION['user_id']): ?>
+                    <!-- Tombol untuk pemilik produk -->
+                    <a href="edit_product.php?id=<?php echo $row['id']; ?>" 
+                       class="btn-custom btn-primary w-100 mb-2">
+                        <i class="fas fa-edit"></i>
+                        <span>Edit Produk</span>
+                    </a>
+                    <button class="btn-custom btn-outline btn-danger w-100 mb-2" 
+                            onclick="deleteProduct(<?php echo $row['id']; ?>, '<?php echo htmlspecialchars($row['nama_produk'], ENT_QUOTES); ?>')">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Hapus Produk</span>
+                    </button>
+                    <?php else: ?>
+                    <!-- Tombol untuk pembeli -->
+                    <button class="btn-custom btn-outline w-100 mb-2" 
+                            onclick="openRatingModal(<?php echo $row['id']; ?>)">
+                        <i class="fas fa-star"></i>
+                        <span>Beri Rating</span>
+                    </button>
+                    <?php endif; ?>
+
+                    <a href="detail_produk.php?id=<?php echo $row['id']; ?>" 
+                       class="btn-custom btn-outline w-100">
+                        <i class="fas fa-eye"></i>
+                        <span>Lihat Detail</span>
+                    </a>
+                </div>
             </div>
-            <?php endwhile; ?>
         </div>
+        <?php endwhile; ?>
     </div>
+</div>
 
     <!-- Rating Modal -->
 <div class="modal fade" id="ratingModal" tabindex="-1" aria-labelledby="ratingModalLabel" aria-hidden="false">
@@ -835,6 +862,67 @@ if (ratingForm) {
             const ratingModal = new bootstrap.Modal(document.getElementById('ratingModal'));
             ratingModal.show();
         }
+
+// Tambahkan ini di bagian script di dashboard.php
+function deleteProduct(productId, productName) {
+    Swal.fire({
+        title: 'Hapus Produk?',
+        text: `Apakah Anda yakin ingin menghapus "${productName}"? Tindakan ini tidak dapat dibatalkan.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        showLoaderOnConfirm: true,
+        preConfirm: async () => {
+            try {
+                const formData = new FormData();
+                formData.append('product_id', productId);
+                
+                const response = await fetch('../actions/delete_product.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Terjadi kesalahan saat menghapus produk');
+                }
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.message || 'Gagal menghapus produk');
+                }
+                
+                return result;
+            } catch (error) {
+                Swal.showValidationMessage(`Request failed: ${error}`);
+            }
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: result.value.message,
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                // Hapus elemen produk dari DOM
+                const productCard = document.querySelector(`[data-product-id="${productId}"]`);
+                if (productCard) {
+                    productCard.closest('.col-6').remove();
+                }
+                
+                // Refresh halaman untuk memastikan data terupdate
+                window.location.reload();
+            });
+        }
+    });
+}
+
     </script>
 </body>
 </html>
