@@ -234,6 +234,67 @@ $product = $result->fetch_assoc();
                 padding: 1rem;
             }
         }
+
+        /* Style untuk quantity selector */
+.quantity-selector {
+    margin-top: 1rem;
+}
+
+.quantity-selector .input-group {
+    width: 150px;
+}
+
+.quantity-selector .form-control {
+    text-align: center;
+    border-left: none;
+    border-right: none;
+}
+
+.quantity-selector .btn {
+    border-color: #ced4da;
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.quantity-selector .btn:hover {
+    background-color: #e9ecef;
+}
+
+.stock-info {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+}
+
+.stock-info p {
+    margin-bottom: 0;
+    color: var(--text-color);
+}
+
+.stock-info .fw-bold {
+    color: var(--primary-color);
+}
+
+/* Animation untuk perubahan quantity */
+.quantity-selector .form-control {
+    transition: all 0.3s ease;
+}
+
+.quantity-selector .form-control:focus {
+    transform: scale(1.05);
+}
+
+/* Disable browser default spinners untuk input number */
+.quantity-selector input[type="number"]::-webkit-inner-spin-button,
+.quantity-selector input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.quantity-selector input[type="number"] {
+    -moz-appearance: textfield;
+}
     </style>
 </head>
 <body>
@@ -253,25 +314,47 @@ $product = $result->fetch_assoc();
 
 <div class="container">
     <div class="row">
-        <!-- Detail Produk -->
-        <div class="col-md-5">
-            <div class="checkout-container">
-                <h3 class="section-title">Detail Produk</h3>
-                <div class="product-image-container">
-                    <img src="../<?php echo htmlspecialchars($product['gambar']); ?>" 
-                         alt="<?php echo htmlspecialchars($product['nama_produk']); ?>" 
-                         class="product-image">
-                    <div class="price-tag">
-                        <i class="fas fa-tag me-2"></i>
-                        Rp <?php echo number_format($product['harga'], 0, ',', '.'); ?>
+       <!-- Detail Produk -->
+<div class="col-md-5">
+    <div class="checkout-container">
+        <h3 class="section-title">Detail Produk</h3>
+        <div class="product-image-container">
+            <img src="../<?php echo htmlspecialchars($product['gambar']); ?>" 
+                 alt="<?php echo htmlspecialchars($product['nama_produk']); ?>" 
+                 class="product-image">
+            <div class="price-tag">
+                <i class="fas fa-tag me-2"></i>
+                Rp <?php echo number_format($product['harga'], 0, ',', '.'); ?>
+            </div>
+        </div>
+        <div class="product-details">
+            <h4 class="product-title"><?php echo htmlspecialchars($product['nama_produk']); ?></h4>
+            <p class="product-description"><?php echo nl2br(htmlspecialchars($product['deskripsi'])); ?></p>
+            
+            <!-- Stock Info dan Quantity Selector -->
+            <div class="stock-info">
+                <p class="mb-2">
+                    <i class="fas fa-box me-2"></i>
+                    Stok Tersedia: <span class="fw-bold"><?php echo $product['stock']; ?></span>
+                </p>
+                <div class="quantity-selector">
+                    <label class="form-label">Jumlah:</label>
+                    <div class="input-group">
+                        <button type="button" class="btn btn-outline-secondary" onclick="updateQuantity('decrease')">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <input type="number" name="quantity" id="quantity" class="form-control text-center" 
+                               value="1" min="1" max="<?php echo $product['stock']; ?>" required
+                               onchange="updateTotal()">
+                        <button type="button" class="btn btn-outline-secondary" onclick="updateQuantity('increase')">
+                            <i class="fas fa-plus"></i>
+                        </button>
                     </div>
-                </div>
-                <div class="product-details">
-                    <h4 class="product-title"><?php echo htmlspecialchars($product['nama_produk']); ?></h4>
-                    <p class="product-description"><?php echo nl2br(htmlspecialchars($product['deskripsi'])); ?></p>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
         <!-- Form Checkout -->
         <div class="col-md-7">
@@ -343,6 +426,7 @@ $product = $result->fetch_assoc();
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// Fungsi untuk memilih metode pembayaran
 function selectPayment(type) {
     // Hapus kelas selected dari semua kartu
     document.querySelectorAll('.payment-method-card').forEach(card => {
@@ -356,21 +440,79 @@ function selectPayment(type) {
     event.currentTarget.querySelector('input[type="radio"]').checked = true;
 }
 
+// Fungsi untuk update jumlah barang
+function updateQuantity(action) {
+    const quantityInput = document.getElementById('quantity');
+    const currentValue = parseInt(quantityInput.value);
+    const maxStock = parseInt(quantityInput.getAttribute('max'));
+    
+    if (action === 'increase' && currentValue < maxStock) {
+        quantityInput.value = currentValue + 1;
+    } else if (action === 'decrease' && currentValue > 1) {
+        quantityInput.value = currentValue - 1;
+    }
+    
+    updateTotal();
+}
+
+// Fungsi untuk memformat angka ke format rupiah
+function formatRupiah(number) {
+    return new Intl.NumberFormat('id-ID').format(number);
+}
+
+// Fungsi untuk update total harga
+function updateTotal() {
+    const quantity = parseInt(document.getElementById('quantity').value);
+    const price = <?php echo $product['harga']; ?>; // Mengambil harga dari PHP
+    const total = quantity * price;
+    
+    // Update subtotal
+    document.querySelector('.summary-item:first-child span:last-child').textContent = 
+        'Rp ' + formatRupiah(total);
+    
+    // Update total (jika ada biaya pengiriman, tambahkan di sini)
+    document.querySelector('.total-amount span:last-child').textContent = 
+        'Rp ' + formatRupiah(total);
+}
+
 // Validasi form sebelum submit
-document.getElementById('checkoutForm').onsubmit = function (e) {
+document.getElementById('checkoutForm').onsubmit = function(e) {
+    const quantity = parseInt(document.getElementById('quantity').value);
+    const maxStock = parseInt(document.getElementById('quantity').getAttribute('max'));
     const nama = document.querySelector('input[name="nama_penerima"]').value;
     const alamat = document.querySelector('textarea[name="alamat"]').value;
     const pembayaran = document.querySelector('input[name="metode_pembayaran"]:checked');
 
+    // Validasi quantity
+    if (quantity <= 0 || quantity > maxStock) {
+        e.preventDefault();
+        alert('Jumlah pembelian tidak valid atau melebihi stok tersedia');
+        return false;
+    }
+
+    // Validasi form
     if (!nama || !alamat || !pembayaran) {
         e.preventDefault();
         alert('Mohon lengkapi semua informasi yang diperlukan');
         return false;
     }
 
+    // Konfirmasi pembelian
+    if (!confirm('Apakah Anda yakin ingin melakukan pembelian ini?')) {
+        e.preventDefault();
+        return false;
+    }
+
     // Jika metode pembayaran adalah E-Wallet, arahkan ke halaman qris.php
     if (pembayaran.value === "E-Wallet") {
         e.preventDefault();
+        // Simpan data form ke session storage sebelum redirect
+        sessionStorage.setItem('checkoutData', JSON.stringify({
+            quantity: quantity,
+            nama_penerima: nama,
+            alamat: alamat,
+            metode_pembayaran: pembayaran.value
+        }));
         window.location.href = "../pages/qris.php";
         return false;
     }
@@ -378,6 +520,25 @@ document.getElementById('checkoutForm').onsubmit = function (e) {
     return true;
 };
 
+// Event listener untuk input quantity
+document.getElementById('quantity').addEventListener('input', function(e) {
+    const value = parseInt(this.value);
+    const max = parseInt(this.getAttribute('max'));
+    
+    if (value > max) {
+        alert('Jumlah melebihi stok tersedia!');
+        this.value = max;
+    } else if (value < 1) {
+        this.value = 1;
+    }
+    
+    updateTotal();
+});
+
+// Inisialisasi total saat halaman dimuat
+document.addEventListener('DOMContentLoaded', function() {
+    updateTotal();
+});
 </script>
 </body>
 </html>

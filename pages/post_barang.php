@@ -13,7 +13,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $harga = $_POST['harga'];
     $kategori = $_POST['kategori'];
     $kondisi = $_POST['kondisi'];
+    $stock = $_POST['stock']; // Tambahkan ini
     $user_id = $_SESSION['user_id'];
+
+    // Validasi stock
+    if (!is_numeric($stock) || $stock < 0) {
+        echo "Stok harus berupa angka positif";
+        exit();
+    }
 
     $upload_dir = "../uploads/";
     if (!is_dir($upload_dir)) {
@@ -23,8 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $gambar_path = $upload_dir . basename($_FILES['gambar']['name']);
     if (move_uploaded_file($_FILES['gambar']['tmp_name'], $gambar_path)) {
         $gambar = "uploads/" . basename($_FILES['gambar']['name']);
-        $stmt = $conn->prepare("INSERT INTO product (nama_produk, deskripsi, harga, kategori, kondisi, gambar, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
-        $stmt->bind_param("ssdsssi", $nama_produk, $deskripsi, $harga, $kategori, $kondisi, $gambar, $user_id);
+        // Ubah query untuk menambahkan kolom stock
+        $stmt = $conn->prepare("INSERT INTO product (nama_produk, deskripsi, harga, kategori, kondisi, gambar, stock, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        $stmt->bind_param("ssdsssii", $nama_produk, $deskripsi, $harga, $kategori, $kondisi, $gambar, $stock, $user_id);
 
         if ($stmt->execute()) {
             header("Location: ../pages/dashboard.php");
@@ -340,6 +348,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <option value="Bekas">Bekas</option>
                             </select>
                             <div class="mb-4">
+    <label class="form-label">
+        <i class="fas fa-cubes me-2"></i>
+        Stok Barang
+    </label>
+    <input type="number" name="stock" class="form-control" 
+           placeholder="Masukkan jumlah stok" 
+           min="0" required>
+</div>
+                            <div class="mb-4">
                                 <div class="image-preview" id="imagePreview">
                                     <div class="placeholder">
                                         <i class="fas fa-image fa-3x mb-2"></i>
@@ -411,17 +428,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Form validation
         document.getElementById('productForm').onsubmit = function (e) {
-            const harga = document.querySelector('input[name="harga"]').value;
-            if (harga <= 0) {
-                e.preventDefault();
-                alert('Harga harus lebih besar dari 0');
-                return false;
-            }
-            return true;
-        };
-
-        // Initialize
-        createParticles();
+    const harga = document.querySelector('input[name="harga"]').value;
+    const stock = document.querySelector('input[name="stock"]').value;
+    
+    if (harga <= 0) {
+        e.preventDefault();
+        alert('Harga harus lebih besar dari 0');
+        return false;
+    }
+    
+    if (stock < 0) {
+        e.preventDefault();
+        alert('Stok tidak boleh negatif');
+        return false;
+    }
+    
+    return true;
+};
     </script>
 </body>
 

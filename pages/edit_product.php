@@ -68,6 +68,35 @@ $product = $result->fetch_assoc();
             max-width: 200px;
             margin: 1rem 0;
         }
+        /* Tambahkan di dalam tag <style> yang sudah ada */
+.stock-management {
+    border: 1px solid #dee2e6;
+}
+
+.current-stock {
+    font-size: 1.1rem;
+}
+
+#currentStock {
+    color: #2c3e50;
+    font-size: 1.2rem;
+}
+
+.stock-history {
+    border-top: 1px solid #dee2e6;
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+#stockAdjustment {
+    min-width: 80px;
+    text-align: center;
+}
+
+#stockAdjustment::-webkit-inner-spin-button,
+#stockAdjustment::-webkit-outer-spin-button {
+    opacity: 1;
+}
     </style>
 </head>
 <body>
@@ -139,6 +168,38 @@ $product = $result->fetch_assoc();
                         <option value="Bekas" <?php echo $product['kondisi'] == 'Bekas' ? 'selected' : ''; ?>>Bekas</option>
                     </select>
                 </div>
+                <!-- Tambahkan bagian manajemen stok -->
+<div class="mb-4">
+    <label class="form-label">Manajemen Stok</label>
+    <div class="stock-management p-3 bg-light rounded">
+        <div class="current-stock mb-3">
+            <p class="mb-2">Stok Saat Ini: <span class="fw-bold" id="currentStock"><?php echo $product['stock']; ?></span></p>
+        </div>
+        <div class="d-flex gap-3 align-items-center mb-3">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary" onclick="adjustStock('decrease')">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <input type="number" class="form-control text-center" id="stockAdjustment" name="stock_adjustment" 
+                       value="0" min="0" style="width: 80px;">
+                <button type="button" class="btn btn-outline-primary" onclick="adjustStock('increase')">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <select class="form-select" id="adjustmentType" name="adjustment_type" style="width: auto;">
+                <option value="add">Tambah Stok</option>
+                <option value="subtract">Kurangi Stok</option>
+                <option value="set">Set Stok Baru</option>
+            </select>
+        </div>
+        <div class="stock-history">
+            <small class="text-muted">
+                <i class="fas fa-history me-1"></i>
+                Perubahan akan dicatat dalam history stok
+            </small>
+        </div>
+    </div>
+</div>
 
                 <div class="mb-3">
                     <label class="form-label">Gambar Saat Ini</label>
@@ -166,51 +227,114 @@ $product = $result->fetch_assoc();
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('editProductForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            try {
-                const formData = new FormData(this);
-                const submitButton = this.querySelector('button[type="submit"]');
-                
-                // Disable button and show loading state
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-                
-                const response = await fetch('../actions/update_product.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: result.message,
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
-                    
-                    // Redirect ke dashboard
-                    window.location.href = 'dashboard.php';
-                } else {
-                    throw new Error(result.message || 'Gagal mengupdate produk');
-                }
-            } catch (error) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message || 'Terjadi kesalahan saat mengupdate produk'
-                });
-            } finally {
-                // Re-enable button and restore original text
-                const submitButton = this.querySelector('button[type="submit"]');
-                submitButton.disabled = false;
-                submitButton.innerHTML = '<i class="fas fa-save"></i> Simpan Perubahan';
-            }
+// Fungsi yang sudah ada sebelumnya - tetap dipertahankan
+document.getElementById('editProductForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    try {
+        const formData = new FormData(this);
+        const submitButton = this.querySelector('button[type="submit"]');
+        
+        // Tambahan untuk stok
+        const currentStock = parseInt(document.getElementById('currentStock').textContent);
+        formData.append('final_stock', currentStock);
+        formData.append('stock_adjustment', document.getElementById('stockAdjustment').value);
+        formData.append('adjustment_type', document.getElementById('adjustmentType').value);
+        
+        // Disable button and show loading state
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+        
+        const response = await fetch('../actions/update_product.php', {
+            method: 'POST',
+            body: formData
         });
-    </script>
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: result.message,
+                showConfirmButton: false,
+                timer: 1500
+            });
+            
+            // Redirect ke dashboard
+            window.location.href = 'dashboard.php';
+        } else {
+            throw new Error(result.message || 'Gagal mengupdate produk');
+        }
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'Terjadi kesalahan saat mengupdate produk'
+        });
+    } finally {
+        // Re-enable button and restore original text
+        const submitButton = this.querySelector('button[type="submit"]');
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fas fa-save"></i> Simpan Perubahan';
+    }
+});
+
+// Fungsi tambahan untuk manajemen stok
+function adjustStock(action) {
+    const input = document.getElementById('stockAdjustment');
+    const currentValue = parseInt(input.value) || 0;
+    
+    if (action === 'increase') {
+        input.value = currentValue + 1;
+    } else if (action === 'decrease' && currentValue > 0) {
+        input.value = currentValue - 1;
+    }
+    
+    previewStockChange();
+}
+
+function previewStockChange() {
+    const currentStock = parseInt(document.getElementById('currentStock').textContent);
+    const adjustment = parseInt(document.getElementById('stockAdjustment').value) || 0;
+    const adjustmentType = document.getElementById('adjustmentType').value;
+    let newStock = currentStock;
+
+    switch (adjustmentType) {
+        case 'add':
+            newStock = currentStock + adjustment;
+            break;
+        case 'subtract':
+            newStock = Math.max(0, currentStock - adjustment);
+            break;
+        case 'set':
+            newStock = adjustment;
+            break;
+    }
+
+    document.getElementById('currentStock').textContent = newStock;
+}
+
+// Event listeners untuk fitur stok
+document.getElementById('stockAdjustment').addEventListener('input', previewStockChange);
+document.getElementById('adjustmentType').addEventListener('change', previewStockChange);
+
+// Validasi input stok
+document.getElementById('stockAdjustment').addEventListener('change', function() {
+    if (this.value < 0) {
+        this.value = 0;
+        Swal.fire({
+            icon: 'warning',
+            title: 'Peringatan',
+            text: 'Nilai stok tidak boleh negatif',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+        });
+    }
+    previewStockChange();
+});
+</script>
 </body>
 </html>
