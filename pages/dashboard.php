@@ -55,6 +55,13 @@ $result = $conn->query("SELECT p.*, u.username as seller_name
                        ORDER BY p.created_at DESC 
                        LIMIT 12");
 
+// Get all distinct categories from the database
+$categories_result = $conn->query("SELECT DISTINCT kategori FROM product ORDER BY kategori");
+$categories = [];
+while ($category = $categories_result->fetch_assoc()) {
+    $categories[] = $category['kategori'];
+}
+
 // Close prepared statement
 $stmt->close();
 ?>
@@ -63,6 +70,7 @@ $stmt->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?php echo $_SESSION['csrf_token']; ?>">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -125,6 +133,203 @@ $stmt->close();
         font-weight: 700;
         color: var(--primary);
     }
+
+    /* Updated Filter Section Styles */
+.filter-section {
+    background: var(--white);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.filter-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.filter-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--light);
+}
+
+.filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+}
+
+.filter-option {
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    background-color: var(--light);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.filter-option:hover {
+    background-color: rgba(41, 128, 185, 0.1);
+    border-color: var(--primary);
+}
+
+.filter-option.active {
+    background-color: var(--primary);
+    color: var(--white);
+    font-weight: 500;
+}
+
+.filter-reset {
+    padding: 0.625rem 1.25rem;
+    background: transparent;
+    border: 1.5px solid var(--primary);
+    color: var(--primary);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    margin-left: auto;
+    height: fit-content;
+    align-self: flex-end;
+}
+
+.filter-reset:hover {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.filter-reset i {
+    transition: transform 0.3s ease;
+}
+
+.filter-reset:hover i {
+    transform: rotate(-180deg);
+}
+
+/* Dark Mode Adjustments */
+[data-theme="dark"] .filter-section {
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .filter-label {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .filter-option {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .filter-option:hover {
+    background-color: rgba(52, 152, 219, 0.2);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .filter-section {
+        padding: 1rem;
+    }
+
+    .filter-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .filter-group {
+        width: 100%;
+    }
+
+    .filter-reset {
+        width: 100%;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+
+    .filter-options {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .filter-options::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+/* Product Grid Layout */
+#products-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.product-item {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    animation: fadeIn 0.3s ease;
+}
+
+.product-item.product-hidden {
+    display: none !important;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 1200px) {
+    #products-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
+    #products-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    #products-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}
 
     /* Product Card Styles - Updated */
     .product-card {
@@ -310,6 +515,20 @@ $stmt->close();
         margin-left: 0.25rem;
     }
 
+    /* Product Transition for filtering */
+    .product-transition {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    
+    .product-hidden {
+        opacity: 0;
+        transform: scale(0.8);
+        height: 0;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
     /* Dark Mode Styles */
     [data-theme="dark"] {
         --primary: #3498db;
@@ -330,7 +549,8 @@ $stmt->close();
         color: var(--text-color);
     }
 
-    [data-theme="dark"] .navbar {
+    [data-theme="dark"] .navbar, 
+    [data-theme="dark"] .filter-section {
         background: var(--card-bg);
         border-bottom: 1px solid rgba(255,255,255,0.1);
     }
@@ -340,17 +560,92 @@ $stmt->close();
         border: 1px solid rgba(255,255,255,0.1);
     }
 
-    /* Mobile Navigation */
-    .mobile-nav {
+    [data-theme="dark"] .filter-option {
+        background-color: var(--light);
+        color: var(--dark);
+    }
+
+    [data-theme="dark"] .filter-option:hover {
+        background-color: rgba(52, 152, 219, 0.2);
+    }
+
+    [data-theme="dark"] .filter-option.active {
+        background-color: var(--primary);
+        color: var(--white);
+    }
+
+   /* Mobile Navigation */
+.mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--white);
+    padding: 0.75rem;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.mobile-nav .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--dark);
+    text-decoration: none;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.mobile-nav .dark-mode-toggle {
+    background: transparent;
+    border: none;
+    color: var(--dark);
+    font-size: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.mobile-nav .nav-item i {
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+}
+
+.mobile-nav .nav-item:hover,
+.mobile-nav .nav-item:active,
+.mobile-nav .dark-mode-toggle:hover,
+.mobile-nav .dark-mode-toggle:active {
+    color: var(--primary);
+}
+
+
+    /* Rating Stars */
+    .stars {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+    }
+    
+    .stars input {
         display: none;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: var(--white);
-        padding: 0.75rem;
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-        z-index: 1000;
+    }
+    
+    .stars label {
+        cursor: pointer;
+        font-size: 25px;
+        color: #ccc;
+        transition: color 0.2s;
+        margin-right: 5px;
+    }
+    
+    .stars label:hover,
+    .stars label:hover ~ label,
+    .stars input:checked ~ label {
+        color: #f1c40f;
     }
 
     @media (max-width: 768px) {
@@ -361,6 +656,15 @@ $stmt->close();
 
         body {
             padding-bottom: 70px;
+        }
+        
+        .filter-container {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .filter-group {
+            width: 100%;
         }
     }
     </style>
@@ -441,6 +745,32 @@ $stmt->close();
                         </li>
                     </ul>
                 </div>
+                <div class="mobile-nav">
+    <a href="../index.php" class="nav-item">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+    </a>
+    <a href="my_products.php" class="nav-item">
+        <i class="fas fa-box"></i>
+        <span>Produk Saya</span>
+    </a>
+    <a href="post_barang.php" class="nav-item">
+        <i class="fas fa-plus-circle"></i>
+        <span>Jual</span>
+    </a>
+    <a href="transactions.php" class="nav-item">
+        <i class="fas fa-shopping-bag"></i>
+        <span>Orders</span>
+    </a>
+    <a href="profile.php" class="nav-item">
+        <i class="fas fa-user"></i>
+        <span>Profil</span>
+    </a>
+    <button id="mobileDarkModeToggle" class="nav-item dark-mode-toggle">
+        <i class="fas fa-moon"></i>
+        <span>Mode</span>
+    </button>
+</div>
  <!-- Three Dots Menu -->
  <div class="dropdown">
                     <button class="btn-custom btn-outline" type="button" id="moreMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
@@ -482,16 +812,82 @@ $stmt->close();
         </div>
     </nav>
 
+<!-- Filter Section -->
+<div class="container mt-3">
+    <div class="filter-section">
+        <div class="filter-container">
+            <div class="filter-group">
+                <div class="filter-label">
+                    <i class="fas fa-tag"></i>
+                    <span>Kategori</span>
+                </div>
+                <div class="filter-options category-filters">
+                    <div class="filter-option active" data-filter="all">
+                        <i class="fas fa-th"></i>
+                        <span>Semua</span>
+                    </div>
+                    <div class="filter-option" data-filter="Elektronik">
+                        <i class="fas fa-laptop"></i>
+                        <span>Elektronik</span>
+                    </div>
+                    <div class="filter-option" data-filter="Fashion">
+                        <i class="fas fa-tshirt"></i>
+                        <span>Fashion</span>
+                    </div>
+                    <div class="filter-option" data-filter="Kesehatan">
+                        <i class="fas fa-heartbeat"></i>
+                        <span>Kesehatan</span>
+                    </div>
+                    <div class="filter-option" data-filter="Makanan">
+                        <i class="fas fa-utensils"></i>
+                        <span>Makanan</span>
+                    </div>
+                    <div class="filter-option" data-filter="Lainnya">
+                        <i class="fas fa-ellipsis-h"></i>
+                        <span>Lainnya</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <div class="filter-label">
+                    <i class="fas fa-star"></i>
+                    <span>Kondisi</span>
+                </div>
+                <div class="filter-options condition-filters">
+                    <div class="filter-option active" data-filter="all">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Semua</span>
+                    </div>
+                    <div class="filter-option" data-filter="Baru">
+                        <i class="fas fa-box"></i>
+                        <span>Baru</span>
+                    </div>
+                    <div class="filter-option" data-filter="Bekas">
+                        <i class="fas fa-recycle"></i>
+                        <span>Bekas</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="resetFilters" class="filter-reset">
+                <i class="fas fa-undo-alt"></i>
+                <span>Reset Filter</span>
+            </button>
+        </div>
+    </div>
+</div>
+
     <!-- Products Grid -->
     <div class="container py-4">
-        <h2 class="h4 mb-4">Produk Terbaru</h2>
-        <div class="row g-4">
-            <?php while ($row = $result->fetch_assoc()): ?>
-            <div class="col-6 col-md-3">
-                <div class="product-card" 
-                     data-category="<?php echo htmlspecialchars($row['kategori']); ?>" 
-                     data-condition="<?php echo htmlspecialchars($row['kondisi']); ?>"
-                     data-product-id="<?php echo $row['id']; ?>">
+    <h2 class="h4 mb-4">Produk Terbaru</h2>
+    <div id="products-container">
+        <?php while ($row = $result->fetch_assoc()): ?>
+        <div class="product-item product-transition" 
+             data-category="<?php echo htmlspecialchars($row['kategori']); ?>" 
+             data-condition="<?php echo htmlspecialchars($row['kondisi']); ?>"
+             data-product-id="<?php echo $row['id']; ?>">
+                <div class="product-card">
                     <div class="product-image-container">
                         <img src="../<?php echo $row['gambar']; ?>" 
                              alt="<?php echo htmlspecialchars($row['nama_produk']); ?>" 
@@ -532,11 +928,12 @@ $stmt->close();
                                     <i class="fas fa-edit"></i>
                                     <span>Edit Produk</span>
                                 </a>
-                                <button class="btn-custom btn-outline btn-danger" 
-                                        onclick="deleteProduct(<?php echo $row['id']; ?>, '<?php echo htmlspecialchars($row['nama_produk'], ENT_QUOTES); ?>')">
-                                    <i class="fas fa-trash-alt"></i>
-                                    <span>Hapus Produk</span>
-                                </button>
+                                <button type="button" 
+        class="btn-custom btn-outline btn-danger" 
+        onclick="deleteProduct(<?php echo $row['id']; ?>, '<?php echo htmlspecialchars($row['nama_produk'], ENT_QUOTES); ?>')">
+    <i class="fas fa-trash-alt"></i>
+    <span>Hapus Produk</span>
+</button>
                             <?php else: ?>
                                 <!-- Tombol untuk pembeli -->
                                 <?php if($row['stock'] > 0): ?>
@@ -613,362 +1010,438 @@ $stmt->close();
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Fungsi untuk format dua digit
-        function padZero(num) {
-            return num < 10 ? '0' + num : num;
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    // --- CSRF TOKEN INITIALIZATION ---
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    if (!csrfToken) {
+        console.error('CSRF token not found in meta tag');
+    }
+    
+    // --- TIME FUNCTIONS ---
+    function padZero(num) {
+        return num < 10 ? '0' + num : num;
+    }
 
-        // Fungsi untuk update waktu live
-        function updateLiveTime() {
-            const timeElement = document.getElementById('live-time');
-            if (timeElement) {
-                const baseTime = new Date('2025-03-02T17:25:13Z');
-                const now = new Date();
-                const timeDiff = now.getTime() - new Date().getTime();
-                const currentTime = new Date(baseTime.getTime() + timeDiff);
-
-                const year = currentTime.getUTCFullYear();
-                const month = padZero(currentTime.getUTCMonth() + 1);
-                const day = padZero(currentTime.getUTCDate());
-                const hours = padZero(currentTime.getUTCHours());
-                const minutes = padZero(currentTime.getUTCMinutes());
-                const seconds = padZero(currentTime.getUTCSeconds());
-
-                const formattedTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-                timeElement.textContent = formattedTime;
-            }
-        }
-
-        // Update waktu setiap detik
-        setInterval(updateLiveTime, 1000);
+    function updateLiveTime() {
+        const timeElement = document.getElementById('live-time');
+        if (!timeElement) return;
+        
+        // Menggunakan waktu Jakarta dari server
+        const jakartaTime = new Date('2025-03-04 21:18:18'); // Waktu Jakarta (UTC+7)
+        jakartaTime.setSeconds(jakartaTime.getSeconds() + timeDiff);
+        
+        const hours = padZero(jakartaTime.getHours());
+        const minutes = padZero(jakartaTime.getMinutes());
+        const seconds = padZero(jakartaTime.getSeconds());
+        
+        timeElement.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+    
+    let timeDiff = 0;
+    const timeInterval = setInterval(() => {
+        timeDiff++;
         updateLiveTime();
+    }, 1000);
+    
+    updateLiveTime();
 
-        // Dark Mode Toggle
-        function initDarkMode() {
-            const darkModeToggle = document.getElementById('darkModeToggle');
-            const htmlElement = document.documentElement;
-            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-            
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                htmlElement.setAttribute('data-theme', savedTheme);
-                updateDarkModeButton(savedTheme === 'dark');
-            } else if (prefersDarkScheme.matches) {
+    // --- DARK MODE FUNCTIONALITY ---
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const htmlElement = document.documentElement;
+    
+    const savedDarkMode = localStorage.getItem('darkMode');
+    if (savedDarkMode === 'enabled') {
+        htmlElement.setAttribute('data-theme', 'dark');
+        if (darkModeToggle) {
+            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i><span class="d-none d-md-inline ms-1">Light Mode</span>';
+        }
+    }
+    
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('click', function() {
+            const isDark = htmlElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                htmlElement.removeAttribute('data-theme');
+                localStorage.setItem('darkMode', 'disabled');
+                this.innerHTML = '<i class="fas fa-moon"></i><span class="d-none d-md-inline ms-1">Dark Mode</span>';
+            } else {
                 htmlElement.setAttribute('data-theme', 'dark');
-                updateDarkModeButton(true);
+                localStorage.setItem('darkMode', 'enabled');
+                this.innerHTML = '<i class="fas fa-sun"></i><span class="d-none d-md-inline ms-1">Light Mode</span>';
             }
+        });
+    }
 
-            darkModeToggle.addEventListener('click', () => {
-                const currentTheme = htmlElement.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                
-                htmlElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-                updateDarkModeButton(newTheme === 'dark');
+    // --- DELETE PRODUCT FUNCTIONALITY ---
+    window.deleteProduct = function(productId, productName) {
+        if (!csrfToken) {
+            Swal.fire({
+                title: 'Error!',
+                text: 'CSRF token tidak ditemukan',
+                icon: 'error',
+                confirmButtonColor: '#e74c3c'
             });
-
-            function updateDarkModeButton(isDark) {
-                const icon = darkModeToggle.querySelector('i');
-                const text = darkModeToggle.querySelector('span');
-                
-                icon.classList.remove('fa-sun', 'fa-moon');
-                icon.classList.add(isDark ? 'fa-sun' : 'fa-moon');
-                text.textContent = isDark ? 'Light Mode' : 'Dark Mode';
-            }
+            return;
         }
 
-        // Initialize dark mode
-        initDarkMode();
+        Swal.fire({
+            title: 'Konfirmasi Hapus',
+            text: `Anda yakin ingin menghapus produk "${productName}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e74c3c',
+            cancelButtonColor: '#3498db',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const formData = new FormData();
+                formData.append('id', productId);
+                formData.append('csrf_token', csrfToken);
 
-        // Fungsi untuk update tampilan stok
-        function updateProductStock(productId, newStock) {
-            const productCard = document.querySelector(`[data-product-id="${productId}"]`);
-            if (productCard) {
-                const stockCount = productCard.querySelector('.stock-count');
-                const stockBadge = productCard.querySelector('.stock-badge');
-                const buyButton = productCard.querySelector('.btn-custom.btn-primary');
-                
-                if (stockCount) {
-                    stockCount.textContent = newStock;
-                    stockCount.parentElement.classList.add('stock-update');
-                    
-                    setTimeout(() => {
-                        stockCount.parentElement.classList.remove('stock-update');
-                    }, 500);
-                    
-                    if (newStock > 0) {
-                        stockBadge.classList.remove('out-of-stock');
-                        stockBadge.classList.add('in-stock');
-                        stockBadge.querySelector('i').classList.remove('fa-times-circle');
-                        stockBadge.querySelector('i').classList.add('fa-check-circle');
-                        
-                        if (buyButton) {
-                            buyButton.disabled = false;
-                            buyButton.innerHTML = '<i class="fas fa-shopping-cart"></i><span>Beli Sekarang</span>';
-                        }
-                    } else {
-                        stockBadge.classList.remove('in-stock');
-                        stockBadge.classList.add('out-of-stock');
-                        stockBadge.querySelector('i').classList.remove('fa-check-circle');
-                        stockBadge.querySelector('i').classList.add('fa-times-circle');
-                        
-                        if (buyButton) {
-                            buyButton.disabled = true;
-                            buyButton.innerHTML = '<i class="fas fa-times"></i><span>Stok Habis</span>';
-                        }
-                    }
-                }
-            }
-        }
-
-        // Fungsi untuk cek update stok
-        function checkStockUpdates() {
-            fetch('../actions/check_stock_updates.php')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.updates) {
-                        data.updates.forEach(update => {
-                            updateProductStock(update.product_id, update.stock);
-                        });
+                fetch('../actions/delete_product.php', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
                     }
                 })
-                .catch(error => console.error('Error checking stock updates:', error));
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const productElement = document.querySelector(`.product-item[data-product-id="${productId}"]`);
+                        if (productElement) {
+                            productElement.style.opacity = '0';
+                            productElement.style.transform = 'scale(0.8)';
+                            setTimeout(() => {
+                                productElement.remove();
+                                const visibleProducts = document.querySelectorAll('.product-item:not(.product-hidden)');
+                                if (visibleProducts.length === 0) {
+                                    const productsContainer = document.getElementById('products-container');
+                                    if (productsContainer) {
+                                        productsContainer.innerHTML = `
+                                            <div class="col-12 text-center py-5">
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    Tidak ada produk yang tersedia.
+                                                </div>
+                                            </div>
+                                        `;
+                                    }
+                                }
+                            }, 300);
+
+                            Swal.fire({
+                                title: 'Berhasil!',
+                                text: 'Produk berhasil dihapus',
+                                icon: 'success',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        }
+                    } else {
+                        throw new Error(data.message || 'Gagal menghapus produk');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: error.message || 'Terjadi kesalahan saat menghapus produk',
+                        icon: 'error',
+                        confirmButtonColor: '#e74c3c'
+                    });
+                });
+            }
+        });
+    };
+
+    // --- FILTER FUNCTIONALITY ---
+    const categoryFilters = document.querySelectorAll('.category-filters .filter-option');
+    const conditionFilters = document.querySelectorAll('.condition-filters .filter-option');
+    const resetButton = document.getElementById('resetFilters');
+    const searchInputs = document.querySelectorAll('.search-input');
+    
+    let currentFilters = {
+        category: 'all',
+        condition: 'all',
+        search: ''
+    };
+    
+    function applyFilters() {
+    const productsContainer = document.getElementById('products-container');
+    const productItems = document.querySelectorAll('.product-item');
+    const searchTerm = currentFilters.search.toLowerCase().trim();
+    let visibleCount = 0;
+    
+    // First pass: determine visibility
+    productItems.forEach(item => {
+        const category = item.getAttribute('data-category');
+        const condition = item.getAttribute('data-condition');
+        const productTitle = item.querySelector('.product-title').textContent.toLowerCase();
+        const productDescription = item.querySelector('.product-description').textContent.toLowerCase();
+        const sellerInfo = item.querySelector('.seller-info').textContent.toLowerCase();
+        
+        const matchesCategory = currentFilters.category === 'all' || category === currentFilters.category;
+        const matchesCondition = currentFilters.condition === 'all' || condition === currentFilters.condition;
+        const matchesSearch = searchTerm === '' || 
+                            productTitle.includes(searchTerm) || 
+                            productDescription.includes(searchTerm) ||
+                            sellerInfo.includes(searchTerm) ||
+                            category.toLowerCase().includes(searchTerm);
+        
+        // Prepare for transition
+        if (matchesCategory && matchesCondition && matchesSearch) {
+            item.style.opacity = '0';
+            item.style.transform = 'scale(0.95)';
+            item.classList.remove('product-hidden');
+            visibleCount++;
+            
+            // Trigger reflow
+            item.offsetHeight;
+            
+            // Apply visible state
+            item.style.opacity = '1';
+            item.style.transform = 'scale(1)';
+        } else {
+            item.style.opacity = '0';
+            item.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => {
+                item.classList.add('product-hidden');
+            }, 300);
         }
+    });
 
-        // Cek update stok setiap 30 detik
-        setInterval(checkStockUpdates, 30000);
-        checkStockUpdates();
+    // Handle no results state
+    if (visibleCount === 0) {
+        if (!document.getElementById('no-products-message')) {
+            const noProductsMessage = document.createElement('div');
+            noProductsMessage.id = 'no-products-message';
+            noProductsMessage.className = 'grid-full-width';
+            noProductsMessage.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Tidak ada produk yang sesuai dengan filter yang dipilih.
+                </div>
+            `;
+            productsContainer.appendChild(noProductsMessage);
+        }
+    } else {
+        const noProductsMessage = document.getElementById('no-products-message');
+        if (noProductsMessage) {
+            noProductsMessage.remove();
+        }
+    }
 
-        // Rating form handling
+    // Force layout recalculation to maintain grid
+    productsContainer.style.display = 'none';
+    productsContainer.offsetHeight; // Force reflow
+    productsContainer.style.display = 'grid';
+    
+    // Update grid layout after transitions
+    setTimeout(() => {
+        const visibleItems = document.querySelectorAll('.product-item:not(.product-hidden)');
+        visibleItems.forEach((item, index) => {
+            item.style.gridColumn = 'auto';
+        });
+    }, 350);
+}
+
+// Add this CSS to your existing styles
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+    #products-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .product-item {
+        opacity: 1;
+        transform: scale(1);
+        transition: all 0.3s ease-in-out;
+    }
+
+    .product-hidden {
+        display: none !important;
+    }
+
+    .grid-full-width {
+        grid-column: 1 / -1;
+        padding: 2rem;
+    }
+
+    @media (max-width: 1200px) {
+        #products-container {
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        #products-container {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        #products-container {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+    }
+`;
+document.head.appendChild(styleSheet);
+
+// The rest of your event listeners remain the same
+categoryFilters.forEach(filter => {
+    filter.addEventListener('click', function() {
+        categoryFilters.forEach(f => f.classList.remove('active'));
+        this.classList.add('active');
+        currentFilters.category = this.getAttribute('data-filter');
+        applyFilters();
+    });
+});
+
+conditionFilters.forEach(filter => {
+    filter.addEventListener('click', function() {
+        conditionFilters.forEach(f => f.classList.remove('active'));
+        this.classList.add('active');
+        currentFilters.condition = this.getAttribute('data-filter');
+        applyFilters();
+    });
+});
+
+// Search input handling remains the same
+let searchTimeout = null;
+searchInputs.forEach(input => {
+    input.addEventListener('input', function() {
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+        
+        searchTimeout = setTimeout(() => {
+            currentFilters.search = this.value;
+            applyFilters();
+        }, 300);
+    });
+
+    // Sync search inputs
+    input.addEventListener('input', function() {
+        const searchValue = this.value;
+        searchInputs.forEach(otherInput => {
+            if (otherInput !== this) {
+                otherInput.value = searchValue;
+            }
+        });
+    });
+});
+
+// Reset button handling
+if (resetButton) {
+    resetButton.addEventListener('click', function() {
+        currentFilters.category = 'all';
+        currentFilters.condition = 'all';
+        
+        searchInputs.forEach(input => {
+            input.value = '';
+        });
+        currentFilters.search = '';
+        
+        categoryFilters.forEach(f => {
+            f.classList.toggle('active', f.getAttribute('data-filter') === 'all');
+        });
+        
+        conditionFilters.forEach(f => {
+            f.classList.toggle('active', f.getAttribute('data-filter') === 'all');
+        });
+        
+        applyFilters();
+    });
+}
+                
+                resetButton.classList.add('filter-reset-active');
+                setTimeout(() => {
+                    resetButton.classList.remove('filter-reset-active');
+                }, 300);
+            });
+        
+        
+        // --- RATING MODAL FUNCTIONALITY ---
+        window.openRatingModal = function(productId) {
+            document.getElementById('product_id').value = productId;
+            const ratingModal = new bootstrap.Modal(document.getElementById('ratingModal'));
+            ratingModal.show();
+        };
+        
         const ratingForm = document.getElementById('ratingForm');
         if (ratingForm) {
-            ratingForm.addEventListener('submit', async function(e) {
+            ratingForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
-                const rating = document.querySelector('input[name="rating"]:checked');
+                const formData = new FormData(this);
+                
+                const rating = formData.get('rating');
                 if (!rating) {
                     Swal.fire({
-                        icon: 'warning',
-                        title: 'Rating Diperlukan',
-                        text: 'Silakan pilih rating terlebih dahulu'
+                        title: 'Error!',
+                        text: 'Silakan pilih rating terlebih dahulu.',
+                        icon: 'error',
+                        confirmButtonColor: '#2980b9'
                     });
                     return;
                 }
-
-                try {
-                    const submitButton = this.querySelector('button[type="submit"]');
-                    submitButton.disabled = true;
-                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-
-                    const formData = new FormData(this);
-
-                    const response = await fetch('../actions/submit_rating.php', {
-                        method: 'POST',
-                        body: formData,
-                        credentials: 'same-origin'
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const result = await response.json();
-
-                    if (result.success) {
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('ratingModal'));
-                        modal.hide();
-                        
-                        await Swal.fire({
+                
+                fetch('../actions/submit_rating.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const ratingModal = bootstrap.Modal.getInstance(document.getElementById('ratingModal'));
+                    ratingModal.hide();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Sukses!',
+                            text: 'Rating Anda telah berhasil disimpan.',
                             icon: 'success',
-                            title: 'Berhasil!',
-                            text: result.message,
-                            showConfirmButton: false,
-                            timer: 1500
+                            confirmButtonColor: '#2980b9'
                         });
-                        
-                        window.location.reload();
                     } else {
-                        throw new Error(result.message || 'Gagal menyimpan rating');
+                        Swal.fire({
+                            title: 'Error!',
+                            text: data.message || 'Terjadi kesalahan saat menyimpan rating.',
+                            icon: 'error',
+                            confirmButtonColor: '#2980b9'
+                        });
                     }
-                } catch (error) {
+                })
+                .catch(error => {
                     console.error('Error:', error);
                     Swal.fire({
+                        title: 'Error!',
+                        text: 'Terjadi kesalahan saat menyimpan rating.',
                         icon: 'error',
-                        title: 'Oops...',
-                        text: error.message || 'Terjadi kesalahan saat menyimpan rating'
+                        confirmButtonColor: '#2980b9'
                     });
-                } finally {
-                    const submitButton = this.querySelector('button[type="submit"]');
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = 'Submit Rating';
-                }
-            });
-        }
-
-        // Delete product function
-        window.deleteProduct = function(productId, productName) {
-            Swal.fire({
-                title: 'Hapus Produk?',
-                text: `Apakah Anda yakin ingin menghapus "${productName}"? Tindakan ini tidak dapat dibatalkan.`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Hapus!',
-                cancelButtonText: 'Batal',
-                showLoaderOnConfirm: true,
-                preConfirm: async () => {
-                    try {
-                        const formData = new FormData();
-                        formData.append('product_id', productId);
-                        
-                        const response = await fetch('../actions/delete_product.php', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        
-                        if (!response.ok) {
-                            throw new Error('Terjadi kesalahan saat menghapus produk');
-                        }
-                        
-                        const result = await response.json();
-                        
-                        if (!result.success) {
-                            throw new Error(result.message || 'Gagal menghapus produk');
-                        }
-                        
-                        return result;
-                    } catch (error) {
-                        Swal.showValidationMessage(`Request failed: ${error}`);
-                    }
-                },
-                allowOutsideClick: () => !Swal.isLoading()
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: result.value.message,
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then(() => {
-                        const productCard = document.querySelector(`[data-product-id="${productId}"]`);
-                        if (productCard) {
-                            productCard.closest('.col-6').remove();
-                        }
-                        window.location.reload();
-                    });
-                }
-            });
-        }
-
-        // Open rating modal function
-        window.openRatingModal = function(productId) {
-            document.getElementById('ratingForm').reset();
-            document.getElementById('product_id').value = productId;
-            document.querySelectorAll('.stars label').forEach(star => {
-                star.style.color = '#ddd';
-            });
-            const ratingModal = new bootstrap.Modal(document.getElementById('ratingModal'));
-            ratingModal.show();
-        }
-
-        // Star rating visual feedback
-        const ratingStars = document.querySelectorAll('.stars label');
-        ratingStars.forEach(star => {
-            star.addEventListener('mouseover', function() {
-                const siblings = [...this.parentElement.children];
-                const starValue = this.getAttribute('for').replace('rate', '');
-                siblings.forEach(sibling => {
-                    if (sibling.tagName === 'LABEL') {
-                        sibling.style.color = sibling.getAttribute('for').replace('rate', '') <= starValue 
-                            ? '#ffd700' 
-                            : '#ddd';
-                    }
                 });
             });
-
-            star.addEventListener('mouseout', function() {
-                const checkedInput = document.querySelector('input[name="rating"]:checked');
-                const siblings = [...this.parentElement.children];
-                siblings.forEach(sibling => {
-                    if (sibling.tagName === 'LABEL') {
-                        sibling.style.color = checkedInput && sibling.getAttribute('for').replace('rate', '') <= checkedInput.value 
-                            ? '#ffd700' 
-                            : '#ddd';
-                    }
-                });
-            });
-        });
-
-        // Handle search input
-        const searchInput = document.querySelector('.search-input');
-        if (searchInput) {
-            searchInput.addEventListener('keyup', function(e) {
-                if (e.key === 'Enter') {
-                    const searchTerm = this.value.trim();
-                    if (searchTerm) {
-                        window.location.href = `search.php?q=${encodeURIComponent(searchTerm)}`;
-                    }
-                }
-            });
         }
-
-        // Handle session timeout
-        let sessionTimeout;
-        function resetSessionTimeout() {
-            clearTimeout(sessionTimeout);
-            sessionTimeout = setTimeout(() => {
-                Swal.fire({
-                    title: 'Sesi Akan Berakhir',
-                    text: 'Anda akan keluar dalam 1 menit. Ingin tetap di halaman ini?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Ya, Tetap',
-                    cancelButtonText: 'Keluar',
-                    timer: 60000,
-                    timerProgressBar: true
-                }).then((result) => {
-                    if (result.dismiss === Swal.DismissReason.timer || result.dismiss === Swal.DismissReason.cancel) {
-                        window.location.href = '../actions/logout.php?logout=true';
-                    } else {
-                        fetch('../actions/reset_session.php');
-                    }
-                });
-            }, 29 * 60 * 1000); // 29 menit
-        }
-
-        // Initialize session timeout
-        resetSessionTimeout();
-        document.addEventListener('mousemove', resetSessionTimeout);
-        document.addEventListener('keypress', resetSessionTimeout);
-
-        // Handle offline/online status
-        window.addEventListener('online', function() {
-            Swal.fire({
-                icon: 'success',
-                title: 'Terhubung Kembali',
-                text: 'Koneksi internet telah dipulihkan',
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000
-            });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            clearInterval(timeInterval);
         });
 
-        window.addEventListener('offline', function() {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Tidak Ada Koneksi',
-                text: 'Periksa koneksi internet Anda',
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false
-            });
-        });
-    });
     </script>
-</body>
-</html>
-                
+    </body>
+    </html>

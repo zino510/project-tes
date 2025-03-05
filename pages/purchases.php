@@ -2,9 +2,13 @@
 session_start();
 include '../config/database.php';
 
-// Current timestamp and user info
-$current_datetime = '2025-02-26 02:35:36';
-$current_user = 'zino510';
+// Set timezone ke WIB
+date_default_timezone_set('Asia/Jakarta');
+
+// Waktu UTC dari input: 2025-03-04 14:43:08
+$current_datetime_utc = '2025-03-04 14:43:08';
+// Konversi ke WIB (UTC+7)
+$current_datetime_wib = date('Y-m-d H:i:s', strtotime($current_datetime_utc . ' +7 hours'));
 
 // Pastikan pengguna sudah login
 if (!isset($_SESSION['user_id'])) {
@@ -13,6 +17,26 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
+
+// Ambil data user dari database
+$user_query = "SELECT nama FROM user WHERE id = ?";
+try {
+    $stmt = $conn->prepare($user_query);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($user = $result->fetch_assoc()) {
+        $current_user = $user['nama']; // Mengambil nama user dari database
+    } else {
+        header("Location: login.php");
+        exit();
+    }
+    $stmt->close();
+} catch (Exception $e) {
+    error_log("Error fetching user data: " . $e->getMessage());
+    header("Location: login.php");
+    exit();
+}
 
 // Ambil data pembelian (produk yang dibeli oleh user)
 $pembelian_query = "
@@ -99,30 +123,31 @@ if ($pembelian_result) {
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <!-- Top Navigation Bar -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-3">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-4">
-                    <a href="../pages/dashboard.php" class="flex items-center text-gray-800 hover:text-green-600 transition-colors">
-                        <i class="fas fa-arrow-left mr-2"></i>
-                        <span class="font-medium">Dashboard</span>
-                    </a>
-                    <div class="h-4 w-px bg-gray-300"></div>
-                    <div class="flex items-center text-gray-600">
-                        <i class="fas fa-user mr-2"></i>
-                        <span><?php echo htmlspecialchars($current_user); ?></span>
-                    </div>
+   <!-- Top Navigation Bar -->
+<nav class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-3">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <a href="../pages/dashboard.php" class="flex items-center text-gray-800 hover:text-green-600 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <div class="h-4 w-px bg-gray-300"></div>
+                <div class="flex items-center text-gray-600">
+                    <i class="fas fa-user-circle mr-2 text-green-600"></i>
+                    <span class="font-medium"><?php echo htmlspecialchars($current_user); ?></span>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <div class="text-sm text-gray-600">
-                        <i class="far fa-clock mr-2"></i>
-                        <span><?php echo date('d M Y H:i', strtotime($current_datetime)); ?> UTC</span>
-                    </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="text-sm text-gray-600">
+                    <i class="far fa-clock mr-2 text-green-600"></i>
+                    <span id="currentDateTime">Loading...</span>
+                    <span class="ml-2 text-sm font-medium">(WIB)</span>
                 </div>
             </div>
         </div>
-    </nav>
+    </div>
+</nav>
 
     <!-- Main Content Container -->
     <div class="container mx-auto px-4 py-8">
@@ -354,6 +379,45 @@ if ($pembelian_result) {
 
     <!-- Scripts -->
     <script>
+
+// Fungsi untuk update waktu real-time WIB
+function updateDateTime() {
+    // Waktu UTC server yang diberikan
+    const serverTimeUTC = new Date('<?php echo $current_datetime_utc; ?>');
+    const currentTime = new Date();
+    
+    // Hitung selisih waktu sejak halaman dimuat
+    const timeDiff = currentTime - window.performance.timing.navigationStart;
+    
+    // Update waktu berdasarkan waktu server + selisih
+    const updatedTime = new Date(serverTimeUTC.getTime() + timeDiff);
+    
+    // Format waktu
+    const hours = String(updatedTime.getUTCHours() + 7).padStart(2, '0');
+    const minutes = String(updatedTime.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(updatedTime.getUTCSeconds()).padStart(2, '0');
+    const day = String(updatedTime.getUTCDate()).padStart(2, '0');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+    const month = months[updatedTime.getUTCMonth()];
+    const year = updatedTime.getUTCFullYear();
+
+    // Format: "04 Mar 2025 21:43:08"
+    const formattedDate = `${day} ${month} ${year} ${hours}:${minutes}:${seconds}`;
+    
+    document.getElementById('currentDateTime').textContent = formattedDate;
+}
+
+// Update waktu setiap detik
+const timeInterval = setInterval(updateDateTime, 1000);
+
+// Update awal saat halaman dimuat
+document.addEventListener('DOMContentLoaded', updateDateTime);
+
+// Bersihkan interval saat halaman unload
+window.addEventListener('unload', () => {
+    clearInterval(timeInterval);
+});
+
         // Confirm delivery function
         function confirmDelivery(transactionId) {
             if (confirm('Apakah Anda yakin telah menerima pesanan ini?')) {
