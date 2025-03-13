@@ -520,16 +520,31 @@ $product = $result->fetch_assoc();
 
         <!-- Scripts -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-       // Ubah bagian JavaScript untuk waktu realtime
+        <script>
+// Definisi variabel global untuk elemen-elemen yang sering digunakan 
+let currentStockElement, stockAdjustment, adjustmentType, stockPreview, stockWarning, originalStock;
+
+// Fungsi untuk memformat angka dengan pemisah ribuan
+function formatNumber(number) {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+// Fungsi untuk memvalidasi input stok
+function validateStockInput(value) {
+    let number = parseInt(value.toString().replace(/\D/g, '')) || 0;
+    return Math.min(Math.max(number, 0), 999999); // Batasi antara 0 dan 999999
+}
+
+// Fungsi untuk mengupdate waktu realtime
 function updateRealtimeClock() {
     const clockElement = document.getElementById('realTimeClock');
+    if (!clockElement) return;
     
     function update() {
-        const now = new Date(); // Waktu lokal
+        const now = new Date();
         const options = {
             weekday: 'long',
-            year: 'numeric',
+            year: 'numeric', 
             month: 'long',
             day: 'numeric',
             hour: '2-digit',
@@ -548,102 +563,145 @@ function updateRealtimeClock() {
         `;
     }
 
-    // Update setiap detik
     update();
     setInterval(update, 1000);
 }
 
-// Jalankan fungsi saat dokumen dimuat
-document.addEventListener('DOMContentLoaded', updateRealtimeClock);
+// Fungsi untuk mengupdate preview perubahan stok
+function updateStockPreview() {
+    if (!currentStockElement || !stockAdjustment || !stockPreview) return;
 
-        // Fungsi untuk mengupdate preview perubahan stok
-        function updateStockPreview() {
-            const adjustment = validateStockInput(stockAdjustment.value);
-            const type = adjustmentType.value;
-            let newStock = originalStock;
-            let previewText = '';
+    const adjustment = validateStockInput(stockAdjustment.value);
+    const type = adjustmentType.value;
+    let newStock = originalStock;
+    let previewText = '';
+    
+    switch(type) {
+        case 'add':
+            newStock = originalStock + adjustment;
+            previewText = adjustment > 0 ? 
+                `Menambah ${formatNumber(adjustment)} unit ke stok (${formatNumber(originalStock)} + ${formatNumber(adjustment)} = ${formatNumber(newStock)})` :
+                'Tidak ada perubahan stok';
+            break;
             
-            switch(type) {
-                case 'add':
-                    newStock = originalStock + adjustment;
-                    previewText = adjustment > 0 ? 
-                        `Menambah ${formatNumber(adjustment)} unit ke stok (${formatNumber(originalStock)} + ${formatNumber(adjustment)} = ${formatNumber(newStock)})` :
-                        'Tidak ada perubahan stok';
-                    break;
-                    
-                case 'subtract':
-                    if (adjustment > originalStock) {
-                        showStockWarning('Pengurangan melebihi stok yang tersedia!');
-                        stockAdjustment.value = originalStock;
-                        newStock = 0;
-                    } else {
-                        newStock = originalStock - adjustment;
-                    }
-                    previewText = adjustment > 0 ?
-                        `Mengurangi ${formatNumber(adjustment)} unit dari stok (${formatNumber(originalStock)} - ${formatNumber(adjustment)} = ${formatNumber(newStock)})` :
-                        'Tidak ada perubahan stok';
-                    break;
-                    
-                case 'set':
-                    newStock = adjustment;
-                    previewText = `Mengatur ulang stok menjadi ${formatNumber(newStock)} unit`;
-                    break;
+        case 'subtract':
+            if (adjustment > originalStock) {
+                showStockWarning('Pengurangan melebihi stok yang tersedia!');
+                stockAdjustment.value = originalStock;
+                newStock = 0;
+            } else {
+                newStock = originalStock - adjustment;
             }
+            previewText = adjustment > 0 ?
+                `Mengurangi ${formatNumber(adjustment)} unit dari stok (${formatNumber(originalStock)} - ${formatNumber(adjustment)} = ${formatNumber(newStock)})` :
+                'Tidak ada perubahan stok';
+            break;
             
-            currentStockElement.textContent = formatNumber(newStock);
-            stockPreview.textContent = previewText;
-            
-            // Animasi perubahan nilai
-            currentStockElement.classList.add('text-primary');
-            setTimeout(() => {
-                currentStockElement.classList.remove('text-primary');
-            }, 300);
-        }
+        case 'set':
+            newStock = adjustment;
+            previewText = `Mengatur ulang stok menjadi ${formatNumber(newStock)} unit`;
+            break;
+    }
+    
+    currentStockElement.textContent = formatNumber(newStock);
+    stockPreview.textContent = previewText;
+    
+    currentStockElement.classList.add('text-primary');
+    setTimeout(() => {
+        currentStockElement.classList.remove('text-primary');
+    }, 300);
+}
 
-        // Fungsi untuk menampilkan peringatan stok
-        function showStockWarning(message) {
-            stockWarning.querySelector('span').textContent = message;
-            stockWarning.style.display = 'block';
-            setTimeout(() => {
-                stockWarning.style.display = 'none';
-            }, 3000);
-        }
+// Fungsi untuk menampilkan peringatan stok
+function showStockWarning(message) {
+    if (!stockWarning) return;
+    const warningSpan = stockWarning.querySelector('span');
+    if (!warningSpan) return;
 
-        // Event listeners untuk tombol tambah/kurang stok
-        document.getElementById('increaseStock').addEventListener('click', () => {
+    warningSpan.textContent = message;
+    stockWarning.style.display = 'block';
+    setTimeout(() => {
+        stockWarning.style.display = 'none';
+    }, 3000);
+}
+
+// Fungsi debounce untuk input stok
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Inisialisasi dan event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Inisialisasi variabel global
+    currentStockElement = document.getElementById('currentStock');
+    stockAdjustment = document.getElementById('stockAdjustment');
+    adjustmentType = document.getElementById('adjustmentType');
+    stockPreview = document.getElementById('stockPreview');
+    stockWarning = document.getElementById('stockWarning');
+    originalStock = parseInt(document.getElementById('originalStock')?.value || 0);
+
+    // Pastikan semua elemen yang diperlukan ada
+    if (!currentStockElement || !stockAdjustment || !adjustmentType || !stockPreview || !stockWarning) {
+        console.error('Beberapa elemen yang diperlukan tidak ditemukan');
+        return;
+    }
+
+    // Event listener untuk tombol tambah stok
+    const increaseButton = document.getElementById('increaseStock');
+    if (increaseButton) {
+        increaseButton.addEventListener('click', () => {
             const currentValue = validateStockInput(stockAdjustment.value);
             if (currentValue < 999999) {
                 stockAdjustment.value = currentValue + 1;
                 updateStockPreview();
             }
         });
+    }
 
-        document.getElementById('decreaseStock').addEventListener('click', () => {
+    // Event listener untuk tombol kurang stok
+    const decreaseButton = document.getElementById('decreaseStock');
+    if (decreaseButton) {
+        decreaseButton.addEventListener('click', () => {
             const currentValue = validateStockInput(stockAdjustment.value);
             if (currentValue > 0) {
                 stockAdjustment.value = currentValue - 1;
                 updateStockPreview();
             }
         });
+    }
 
-        // Event listener untuk input stok manual
-        stockAdjustment.addEventListener('input', function() {
+    // Event listener untuk input stok manual dengan debouncing
+    if (stockAdjustment) {
+        stockAdjustment.addEventListener('input', debounce(function() {
             this.value = validateStockInput(this.value);
             updateStockPreview();
-        });
+        }, 300));
+    }
 
-        // Event listener untuk perubahan tipe penyesuaian
+    // Event listener untuk perubahan tipe penyesuaian
+    if (adjustmentType) {
         adjustmentType.addEventListener('change', updateStockPreview);
+    }
 
-        // Form submission handler
-        document.getElementById('editProductForm').addEventListener('submit', async function(e) {
+    // Event listener untuk form submission
+    const form = document.getElementById('editProductForm');
+    if (form) {
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             try {
                 const formData = new FormData(this);
                 const submitButton = this.querySelector('button[type="submit"]');
+                if (!submitButton) throw new Error('Submit button not found');
                 
-                // Validasi stok final
                 const finalStock = parseInt(currentStockElement.textContent.replace(/\./g, ''));
                 if (finalStock < 0) {
                     throw new Error('Stok tidak boleh negatif');
@@ -654,7 +712,6 @@ document.addEventListener('DOMContentLoaded', updateRealtimeClock);
                 formData.append('stock_adjustment', stockAdjustment.value);
                 formData.append('adjustment_type', adjustmentType.value);
                 
-                // Disable button dan tampilkan loading state
                 submitButton.disabled = true;
                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
                 
@@ -685,17 +742,47 @@ document.addEventListener('DOMContentLoaded', updateRealtimeClock);
                     text: error.message || 'Terjadi kesalahan saat mengupdate produk'
                 });
             } finally {
-                const submitButton = this.querySelector('button[type="submit"]');
-                submitButton.disabled = false;
-                submitButton.innerHTML = '<i class="fas fa-save me-1"></i> Simpan Perubahan';
+                const submitButton = form.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-save me-1"></i> Simpan Perubahan';
+                }
             }
         });
+    }
 
-        // Inisialisasi saat halaman dimuat
-        document.addEventListener('DOMContentLoaded', function() {
-            updateRealtimeClock();
-            updateStockPreview();
+    // Preview gambar yang diupload
+    const imageInput = document.getElementById('gambar');
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            const preview = document.getElementById('imagePreview');
+            const file = e.target.files[0];
+            
+            if (!preview || !file) return;
+
+            if (file.size > 5 * 1024 * 1024) { // 5MB
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ukuran file tidak boleh lebih dari 5MB'
+                });
+                this.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.style.display = 'block';
+                preview.querySelector('img').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
         });
-    </script>
+    }
+
+    // Inisialisasi komponen
+    updateRealtimeClock();
+    updateStockPreview();
+});
+</script>
 </body>
 </html>

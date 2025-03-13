@@ -449,6 +449,40 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Check for stock updates
+    const stockUpdate = localStorage.getItem('stockUpdate');
+if (stockUpdate) {
+    const updateData = JSON.parse(stockUpdate);
+    const productCard = document.querySelector(`[data-product-id="${updateData.product_id}"]`);
+    if (productCard) {
+        const stockDisplay = productCard.querySelector('.stock-info');
+        if (stockDisplay) {
+            // Gunakan new_stock yang sudah dihitung dengan benar
+            stockDisplay.textContent = `Stok: ${updateData.new_stock}`;
+            stockDisplay.style.backgroundColor = '#e8f5e9';
+            setTimeout(() => {
+                stockDisplay.style.backgroundColor = 'transparent';
+            }, 2000);
+        }
+    }
+    // Clear the update data
+    localStorage.removeItem('stockUpdate');
+}
+});
+
+// Tambahkan style untuk animasi update stok
+const style = document.createElement('style');
+style.textContent += `
+    .stock-updated {
+        animation: highlight 2s ease-out;
+    }
+    @keyframes highlight {
+        0% { background-color: rgba(46, 204, 113, 0.2); }
+        100% { background-color: transparent; }
+    }
+`;
+document.head.appendChild(style);
+
     // Add timestamp to user session
     const currentTime = '2025-03-04 04:13:00';
     const userLogin = 'indag';

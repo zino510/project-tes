@@ -32,6 +32,7 @@ $product = $result->fetch_assoc();
 <head>
 <link rel="icon" type="image/x-icon" href="../favicon/favicon.ico">
 <link rel="shortcut icon" href="../favicon/favicon.ico" type="image/x-icon">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - <?php echo htmlspecialchars($product['nama_produk']); ?></title>
@@ -361,7 +362,8 @@ $product = $result->fetch_assoc();
             <div class="checkout-container">
                 <h3 class="section-title">Informasi Pengiriman</h3>
                 <form action="process_checkout.php" method="POST" id="checkoutForm">
-                    <input type="hidden" name="product_id" value="<?php echo $product_id; ?>">
+                <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+                <input type="hidden" name="quantity" id="quantityInput" value="1">
                     
                     <div class="mb-3">
                         <label class="form-label">
@@ -399,20 +401,33 @@ $product = $result->fetch_assoc();
                     </div>
 
                     <div class="order-summary">
-                        <h4 class="mb-3">Ringkasan Pesanan</h4>
-                        <div class="summary-item">
-                            <span>Subtotal</span>
-                            <span>Rp <?php echo number_format($product['harga'], 0, ',', '.'); ?></span>
-                        </div>
-                        <div class="summary-item">
-                            <span>Biaya Pengiriman</span>
-                            <span>Rp 0</span>
-                        </div>
-                        <div class="summary-item total-amount">
-                            <span>Total</span>
-                            <span>Rp <?php echo number_format($product['harga'], 0, ',', '.'); ?></span>
-                        </div>
-                    </div>
+    <h4 class="mb-3">Ringkasan Pesanan</h4>
+    <!-- Menampilkan harga per item -->
+    <div class="summary-item">
+        <span>Harga Barang</span>
+        <span id="hargaPerItem">Rp <?php echo number_format($product['harga'], 0, ',', '.'); ?></span>
+    </div>
+    <!-- Menampilkan jumlah item -->
+    <div class="summary-item">
+        <span>Jumlah</span>
+        <span id="jumlahItem">1</span>
+    </div>
+    <!-- Subtotal (harga x jumlah) -->
+    <div class="summary-item">
+        <span>Subtotal</span>
+        <span id="subtotal">Rp <?php echo number_format($product['harga'], 0, ',', '.'); ?></span>
+    </div>
+    <!-- Biaya ppn -->
+    <div class="summary-item">
+        <span>Biaya penanganan</span>
+        <span id="ppn">Rp <?php echo number_format($product['harga'] * 0.15, 0, ',', '.'); ?></span>
+    </div>
+    <!-- Total keseluruhan -->
+    <div class="summary-item total-amount">
+    <span>Total</span>
+        <span id="totalAmount">Rp <?php echo number_format($product['harga'] * 1.15, 0, ',', '.'); ?></span>
+    </div>
+</div>
 
                     <button type="submit" class="btn btn-checkout">
                         <i class="fas fa-lock me-2"></i>
@@ -426,30 +441,32 @@ $product = $result->fetch_assoc();
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// Konstanta untuk timestamp dan user dari PHP
+const CURRENT_TIMESTAMP = '<?php echo date("Y-m-d H:i:s"); ?>';
+const CURRENT_USER = '<?php echo isset($_SESSION["user_login"]) ? $_SESSION["user_login"] : ""; ?>';
+
 // Fungsi untuk memilih metode pembayaran
 function selectPayment(type) {
-    // Hapus kelas selected dari semua kartu
     document.querySelectorAll('.payment-method-card').forEach(card => {
         card.classList.remove('selected');
     });
-    
-    // Tambah kelas selected ke kartu yang dipilih
     event.currentTarget.classList.add('selected');
-    
-    // Check radio button
     event.currentTarget.querySelector('input[type="radio"]').checked = true;
 }
 
 // Fungsi untuk update jumlah barang
 function updateQuantity(action) {
     const quantityInput = document.getElementById('quantity');
+    const quantityHidden = document.getElementById('quantityInput');
     const currentValue = parseInt(quantityInput.value);
     const maxStock = parseInt(quantityInput.getAttribute('max'));
     
     if (action === 'increase' && currentValue < maxStock) {
         quantityInput.value = currentValue + 1;
+        quantityHidden.value = currentValue + 1;
     } else if (action === 'decrease' && currentValue > 1) {
         quantityInput.value = currentValue - 1;
+        quantityHidden.value = currentValue - 1;
     }
     
     updateTotal();
@@ -463,66 +480,78 @@ function formatRupiah(number) {
 // Fungsi untuk update total harga
 function updateTotal() {
     const quantity = parseInt(document.getElementById('quantity').value);
-    const price = <?php echo $product['harga']; ?>; // Mengambil harga dari PHP
-    const total = quantity * price;
+    const price = <?php echo $product['harga']; ?>;
+    const subtotal = quantity * price;
+    const ppn = subtotal * 0.15;
+    const total = subtotal + ppn;
     
-    // Update subtotal
-    document.querySelector('.summary-item:first-child span:last-child').textContent = 
-        'Rp ' + formatRupiah(total);
+    document.getElementById('jumlahItem').textContent = quantity;
+    document.getElementById('hargaPerItem').textContent = 'Rp ' + formatRupiah(price);
+    document.getElementById('subtotal').textContent = 'Rp ' + formatRupiah(subtotal);
+    document.getElementById('ppn').textContent = 'Rp ' + formatRupiah(ppn);
+    document.getElementById('totalAmount').textContent = 'Rp ' + formatRupiah(total);
     
-    // Update total (jika ada biaya pengiriman, tambahkan di sini)
-    document.querySelector('.total-amount span:last-child').textContent = 
-        'Rp ' + formatRupiah(total);
+    // Update hidden input
+    document.getElementById('quantityInput').value = quantity;
 }
 
-// Validasi form sebelum submit
+// Form submission handler
 document.getElementById('checkoutForm').onsubmit = function(e) {
+    e.preventDefault();
+
     const quantity = parseInt(document.getElementById('quantity').value);
     const maxStock = parseInt(document.getElementById('quantity').getAttribute('max'));
+    const productId = <?php echo $product['id']; ?>;
     const nama = document.querySelector('input[name="nama_penerima"]').value;
     const alamat = document.querySelector('textarea[name="alamat"]').value;
     const pembayaran = document.querySelector('input[name="metode_pembayaran"]:checked');
 
-    // Validasi quantity
-    if (quantity <= 0 || quantity > maxStock) {
-        e.preventDefault();
-        alert('Jumlah pembelian tidak valid atau melebihi stok tersedia');
-        return false;
-    }
-
     // Validasi form
     if (!nama || !alamat || !pembayaran) {
-        e.preventDefault();
         alert('Mohon lengkapi semua informasi yang diperlukan');
         return false;
     }
 
-    // Konfirmasi pembelian
-    if (!confirm('Apakah Anda yakin ingin melakukan pembelian ini?')) {
-        e.preventDefault();
+    if (quantity <= 0 || quantity > maxStock) {
+        alert('Jumlah pembelian tidak valid atau melebihi stok tersedia');
         return false;
     }
 
-    // Jika metode pembayaran adalah E-Wallet, arahkan ke halaman qris.php
+    // Ambil total dengan PPN
+    const totalText = document.getElementById('totalAmount').textContent;
+    const total = parseFloat(totalText.replace('Rp ', '').replace(/\./g, '').replace(',', '.'));
+
+    // Konfirmasi pembelian
+    if (!confirm(`Total pembayaran (termasuk PPN 15%): Rp ${formatRupiah(total)}\nApakah Anda yakin ingin melakukan pembelian ini?`)) {
+        return false;
+    }
+
+    // Handle E-Wallet payment
     if (pembayaran.value === "E-Wallet") {
-        e.preventDefault();
-        // Simpan data form ke session storage sebelum redirect
-        sessionStorage.setItem('checkoutData', JSON.stringify({
+        const checkoutData = {
             quantity: quantity,
             nama_penerima: nama,
             alamat: alamat,
-            metode_pembayaran: pembayaran.value
-        }));
+            metode_pembayaran: pembayaran.value,
+            total: total,
+            timestamp: CURRENT_TIMESTAMP,
+            user: CURRENT_USER,
+            product_id: productId
+        };
+        
+        sessionStorage.setItem('checkoutData', JSON.stringify(checkoutData));
         window.location.href = "../pages/qris.php";
         return false;
     }
 
-    return true;
+    // Untuk metode pembayaran lain, submit form secara normal
+    this.submit();
+    return false; // Prevent default form submission
 };
 
 // Event listener untuk input quantity
 document.getElementById('quantity').addEventListener('input', function(e) {
-    const value = parseInt(this.value);
+    const value = parseInt(this.value) || 1;
     const max = parseInt(this.getAttribute('max'));
     
     if (value > max) {
@@ -535,9 +564,26 @@ document.getElementById('quantity').addEventListener('input', function(e) {
     updateTotal();
 });
 
-// Inisialisasi total saat halaman dimuat
+// Event listener untuk tombol quantity
+document.querySelectorAll('.quantity-selector button').forEach(button => {
+    button.addEventListener('click', updateTotal);
+});
+
+// Inisialisasi saat halaman dimuat
 document.addEventListener('DOMContentLoaded', function() {
     updateTotal();
+    
+    const orderSummary = document.querySelector('.order-summary');
+    
+    const timestampInfo = document.createElement('div');
+    timestampInfo.classList.add('small', 'text-muted', 'mt-2');
+    timestampInfo.textContent = `Waktu Transaksi: ${CURRENT_TIMESTAMP}`;
+    orderSummary.appendChild(timestampInfo);
+
+    const userInfo = document.createElement('div');
+    userInfo.classList.add('small', 'text-muted');
+    userInfo.textContent = `User: ${CURRENT_USER}`;
+    orderSummary.appendChild(userInfo);
 });
 </script>
 </body>
